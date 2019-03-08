@@ -1,0 +1,295 @@
+<style lang="less">
+    .text-recordGSX {
+        overflow: hidden;
+        position: relative;
+        .yearLong {
+            background-color: #fff;
+            padding: 24rpx 0rpx;
+            width:100%;
+            height:47rpx;
+            font-size: 28rpx;
+            font-family:PingFangSC-Regular;
+            color:rgba(136,136,136,1);
+            line-height:47rpx;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .textInfo {
+           padding: 15rpx 30rpx; 
+           font-size: 34rpx;
+           color: rgba(0,0,0,1);
+           height: 120rpx;
+           box-sizing: border-box;
+           line-height: 48rpx;
+           background-color: #fff;
+        }
+        .textTime {
+            font-size: 26rpx;
+            color: rgba(136,136,136,1);
+            line-height: 37rpx;
+        }
+        .addRecord {
+            height: 96rpx;
+        }
+
+        .status {
+            float:right;
+            margin: 3px 20px 0 0;
+            font-size: 34rpx;
+            line-height: 48rpx;
+        }
+        .pass {
+            color: #00C700;
+        }
+        .no-pass {
+            color: #FF2A2A;
+        }
+        .miss {
+            color: #B79638
+        }
+
+        .inv-summarizeG {
+            .textInfo {
+                position: relative;
+                padding: 0 0 0 30rpx; 
+                background-color: #fff;           
+                font-size: 34rpx;
+            .content {
+                    color: rgba(0,0,0,1);
+                    padding: 15rpx 0;
+                    box-sizing: border-box;
+            }
+            }
+            .borderB {
+                border-bottom: 1rpx solid #E5E5E5;
+            }
+            .addRecord {
+                margin-top: 50rpx;
+                margin-bottom: 100rpx;
+            }
+        }
+
+    }
+</style>
+<template>
+    <view class="text-recordGSX">
+        <view class="yearLong ">
+            {{year}}
+        </view>
+        <view wx:if="{{isShowdengji}}">
+            <repeat 
+                for="{{recordDate}}" 
+                key="index" index="index"
+                item="item">
+                <textRecordC
+                    @clickItem.user='clickItem'
+                    :recordDate="item"
+                    :index='index'
+                >
+                <taxt slot="status1" class="status {{item.xkzt==0?'pass':item.xkzt=='1'?'no-pass':'miss'}}">
+                    {{item.xkzt==0?'未开始':item.xkzt==2?"进行中":'已结束'}}
+                </taxt>
+                </textRecordC>
+            </repeat>
+            <view class="addRecord">
+                <!-- <button type="primary" @tap='addSumm'>
+                    添加巡考登记
+                </button> -->
+            </view>
+        </view>
+        <!-- <view wx:else class="inv-summarizeG">
+            <view 
+                wx:for="{{recordDate1}}"
+                wx:key="index"
+            >
+                <view 
+                    wx:for="{{item.list}}"
+                    wx:key="index"
+                    wx:for-item="items"
+                    class="textInfo"
+                    @tap="checkSumm"
+                >
+                    <view class="content {{index != item.list.length-1? 'borderB':'' }}">{{items.text}}</view>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+                </view>
+            </view>
+            <view class="addRecord">
+                <button type="primary" @tap='addSumm'>
+                    添加巡考总结
+                </button>
+        </view>
+        </view> -->
+        <bottomTab
+            position="fixed-bottom"
+            :listA='listA'
+            @tabChanges.user='tabChanges'
+            :int.sync='int'
+        ></bottomTab>
+    </view>
+</template>
+
+
+<script>
+import wepy from 'wepy';
+// import utils from 'utils/util';
+import tips from 'utils/tips';
+// import SliderNav from 'components/sliderNav';
+import textRecordC from 'components/textRecordC';
+import bottomTab from 'components/bottomTab';
+import tourTest from '../api/tourTest';
+import Common from '../api/common';
+
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '巡考登记',
+        navigationBarTextStyle: '#fff',
+    }
+    components = {
+        // SliderNav: SliderNav,
+        textRecordC: textRecordC,
+        bottomTab: bottomTab,
+    };
+
+    data = {
+        year: '',
+        int: 0,
+        isShowdengji: true,
+        listA: [
+            {
+                title: '巡考登记',
+                src: '../images/JKanpai.png',
+                ac_src: '../images/ac_JKanpai.png',
+            },
+            // {
+            //     title: '巡考总结',
+            //     src: '../images/JKjilu.png',
+            //     ac_src: '../images/ac_JKjilu.png',
+            // },
+            {
+                title: '个人中心',
+                src: '../images/Shape.png',
+                ac_src: '../images/Shape1.png',
+            },
+        ],
+        recordDate: [],
+        recordDate1: [],
+    };
+    computed = {
+    };
+
+    methods = {
+        async getList(that) {
+            const data = await tourTest.getList();
+            if (data.statusCode === 200) {
+                that.recordDate = data.data.data;
+                // rData.forEach(item => {
+                //     if (item.xkrq) {
+                //         const temp = item.xkrq.substr(0, item.xkrq.indexOf('.')).split('-').join('/');
+                //         item.xkrq = utils.dateFormat(new Date(temp), 'Y-m-d H:i:s');
+                //     };
+                // });
+            }
+            Common.nowNdXq().then(res => {
+                that.year = res.data.data.nowNdXq;
+                that.$apply();
+            }).catch(res => {
+                console.log('res');
+            });
+        },
+        clickItem(val, index) {
+            const str = this.recordDate[index].xkrq.substr(0, 16).split('-').join('/');
+            const isFuture = new Date(str).getTime() > new Date().getTime();
+            if (isFuture) {
+                tips.error('考试还未开始');
+                return;
+            };
+            wepy.setStorage({
+                key: 'year',
+                data: this.recordDate[index].xkrq,
+            });
+            wepy.setStorage({
+                key: 'site',
+                data: this.recordDate[index].xkdd,
+            });
+            try {
+                wepy.setStorageSync('formId', val);
+            } catch (e) {}
+            // wepy.setStorage({
+            //     key: 'formId',
+            //     data: val,
+            // });
+            wepy.navigateTo({
+                url: `invigilateForm`,
+            });
+        },
+        // addSumm() {
+        //     wepy.navigateTo({
+        //         url: 'inviSummrizeForm?from=true',
+        //     });
+        // },
+        // checkSumm() {
+        //     wepy.navigateTo({
+        //         url: 'summarize',
+        //     });
+        // },
+        tabChanges(val) {
+            // wepy.setNavigationBarTitle({
+            //     title: val === 0 ? '巡考登记' : '巡考总结',
+            // });
+            if (val === 0) {
+                this.isShowdengji = true;
+                return;
+            };
+            // if (val === 1) {
+            //     this.isShowdengji = false;
+            //     // wepy.navigateTo({
+            //     //     url: 'invSummarize',
+            //     // });
+            //     return;
+            // };
+            if (val === 1) {
+                wepy.navigateTo({
+                    url: 'personCenter',
+                });
+                if (this.isShowdengji) {
+                    this.$com.bottomTab.int = 0;
+                    return;
+                }
+                this.$com.bottomTab.int = 1;
+                return;
+            };
+            // if (val === 2) {
+            //     wepy.navigateTo({
+            //         url: 'personCenter',
+            //     });
+            //     if (this.isShowdengji) {
+            //         this.$com.bottomTab.int = 0;
+            //         return;
+            //     }
+            //     this.$com.bottomTab.int = 1;
+            //     return;
+            // };
+        },
+    };
+    onShow() {
+    };
+    onLoad() {
+        // this.int = 1;
+        this.$apply();
+        const that = this;
+        this.methods.getList(that);
+    };
+    // onShareAppMessage(res) {
+    //     if (res.from === 'button') {
+    //     // 来自页面内转发按钮
+    //         console.log(res.target);
+    //     };
+    //     return {
+    //         title: '自定义转发标题',
+    //         path: 'invigilateForm',
+    //     };
+    // };
+};
+</script>

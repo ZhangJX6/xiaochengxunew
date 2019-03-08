@@ -1,0 +1,386 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .violation-stu-boss {
+        .has-icon-arrow {
+            position: relative;
+        }
+        .register-surface-list-item {
+            font-size: 34rpx;
+            line-height: 90rpx;
+            view:nth-of-type(1) {
+                color: @000;
+            }
+            view:nth-of-type(2) {
+                color: @888;
+            }
+        }
+        .turn-down {
+            transform: rotate(90deg);
+            transition: transform .2s ease;
+        }
+        .turn-up {
+            transform: rotate(-90deg);
+        }
+        .violation-show-article {
+            color: @666;
+            text-indent: .5em;
+            font-size: 30rpx;
+            line-height: 30rpx;
+            padding-bottom: 30rpx;
+        }
+        .input-info-text-area {
+            width: 100%;
+            font-size: 32rpx;
+            border-radius: 10rpx;
+            padding: 10rpx;
+            box-sizing: border-box;
+        }
+        .text-area-container {
+            padding: 20rpx;
+            box-sizing: border-box;
+            background-color: @bgColor;
+        }
+        .get-image-container {
+            > view {
+                float: left;
+                margin-right: 18rpx;
+            }
+            padding: 30rpx 20rpx 20rpx 20rpx;
+            background-color: @fff;
+            min-height: 200rpx;
+            margin-bottom: 105rpx;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        
+        .get-image-container:after{
+            display: block;
+            content:'';
+            clear: both;
+            height:0;
+        }
+        .image-common {
+            width: 158rpx;
+            height: 158rpx;
+        }
+        .chosed-image {
+            position: relative;
+            margin-bottom: 20rpx;
+            image:nth-of-type(1) {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 32rpx;
+                height: 32rpx;
+                z-index: 19;
+            }
+            image:nth-of-type(2) {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+        .input-info-add-image {
+            border: solid 2rpx @666;
+            position: relative;
+            &::before {
+                content: '';
+                display: inline-block;
+                width: 4rpx;
+                height: 100rpx;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background-color: @666;
+            }
+            &::after {
+                content: '';
+                display: inline-block;
+                width: 100rpx;
+                height: 4rpx;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background-color: @666;
+            }
+        }
+    }
+    .kcjs {
+        color: #666;
+        font-size: 24rpx;
+        text-indent: 1em;
+        padding:10rpx 30rpx;
+    }
+</style>
+
+<template>
+    <view class="violation-stu-boss">
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>姓名</view>
+                    <view>{{xm}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>学号</view>
+                    <view>{{xh}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item" @tap="tapStuContent">
+                    <view>违规内容</view>
+                    <view class="mr30" wx:if="{{types === 'add'}}"></view>
+                    <view class="mr30" wx:if="{{types === 'show'}}">{{showArticle ? '收起' : '查看' }}</view>
+                </view>
+                <image src="../images/arrow.png" class="icon-arrow-right middle turn-down {{showArticle ? 'turn-up' : ''}}" />
+            </ListItemContainer>
+
+            <view wx:if="{{types === 'show' && showArticle}}" class="white pl30 pr30 pt30 pb30 violation-show-article">{{wgxw}}</view>
+            <view wx:if="{{types === 'add' && showArticle}}" class="text-area-container">
+                <textarea 
+                    value='{{infos}}'
+                    maxlength= '-1'
+                    class="white input-info-text-area"
+                    bindinput="getInputInfos"
+                    placeholder-style="color:#888"
+                    focus='{{showArticle}}'
+                    placeholder="请输入违规内容" />
+            </view>
+
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item" @tap="tapStuImage">
+                    <view>{{imgTitle}}</view>
+                    <view class="mr30"></view>
+                </view>
+                <!-- <image src="../images/arrow.png" class="icon-arrow-right middle turn-down {{isShowImgs ? 'turn-up' : ''}}" /> -->
+            </ListItemContainer>
+
+            <view class="get-image-container" wx:if="{{types === 'add'}}">
+                <view class="image-common chosed-image" wx:for="{{chosedImgs}}" wx:for-item="item" wx:for-index="index" wx:key="item" >
+                    <image src="../images/close.png" @tap="tapToDeleteIMG({{index}})"></image>
+                    <image src="{{item}}" @tap="tapToPreviewImage({{index}})" ></image>
+                </view>
+                <view class="input-info-add-image image-common" @tap="tapToAddImage"></view>
+            </view>
+
+            <view class="get-image-container" wx:if="{{types === 'show'}}">
+                <view class="image-common chosed-image" wx:if="{{chosedImgs.length}}" wx:for="{{chosedImgs}}" wx:for-item="item" wx:for-index="index" wx:key="item" >
+                    <image></image>
+                    <image src="{{item}}" @tap="tapToPreviewImage({{index}})" class="image-common"></image>
+                </view>
+                <view wx:if="{{!chosedImgs.length}}" class="kcjs" style="text-indent:0;">暂无图片</view>
+            </view>
+            <view style="width:100%; height: 10rpx;"></view>
+            <button type="primary" class="fix-bottom" @tap="tapToConfirm">确认</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import ListItemContainer from 'components/listItemContainer';
+import sys from '../api/sys';
+
+export default class violationStudent extends wepy.page {
+    config = {
+        navigationBarTitleText: '违规考生',
+    };
+    data = {
+        showArticle: true,
+        isShowImgs: false,
+        xm: null,
+        xh: null,
+        wgxw: null,
+        types: null, // 类型: dis, add
+        infos: null,
+        chosedImgs: [],
+        index: null,
+        attList: '',
+        imgTitle: '添加图片',
+        from: null,
+    };
+    components = {
+        ListItemContainer: ListItemContainer,
+    };
+    methods = {
+        // 点击违规内容
+        tapStuContent() {
+            this.showArticle = !this.showArticle;
+        },
+        getInputInfos(val) {
+            this.infos = val.detail.value;
+        },
+        async tapToAddImage() {
+            const rdata = await wepy.chooseImage({
+                count: 9,
+                sizeType: [ 'original', 'compressed', ],
+                sourceType: [ 'album', 'camera', ],
+            });
+            this.chosedImgs = [ ...rdata.tempFilePaths, ...this.chosedImgs, ];
+            this.$apply();
+        },
+        tapToDeleteIMG(index) {
+            this.chosedImgs.splice(index, 1);
+            this.$apply();
+        },
+        // 点击违规照片
+        // tapStuImage() {
+        //     this.isShowImgs = !this.isShowImgs;
+        // },
+        // 点击确认
+        async tapToConfirm() {
+            /*
+            * 前来查看信息
+            */
+            if (this.types === 'show') {
+                wepy.navigateBack({ delta: 1, });
+                return;
+            }
+            /*
+            * 查看并可以修改行为信息
+            */
+            if (!this.infos && this.types === 'add') {
+                tips.error('请输入违规内容');
+                return;
+            }
+
+            if (wepy.$instance.globalData.gData.wgks.length && (!isNaN(this.index) && this.index !== null)) { // 点击已输入信息学生
+                wepy.$instance.globalData.gData.wgks.forEach((item, index) => {
+                    if (item.xm === this.xm && item.xh === this.xh && item.wgxw !== this.infos) { // 非首次添加违规学生
+                        tips.confirm('已添加该学生,确认进行修改？', {}).then(
+                            async res => {
+                                wepy.$instance.globalData.gData.wgks[index].wgxw = this.infos;
+
+                                await this.methods.getImgIds(this, this.index - 1, 1);
+                            }
+                        ).catch(error => {
+                            console.log(error);
+                            tips.error('取消修改');
+                        });
+                    } else { // 未修改备注信息
+                        if (index !== this.index) return;
+                        this.methods.getImgIds(this, this.index - 1, 1); // 查看是否添加照片
+                    }
+                });
+            } else { // 首次添加违规学生
+                wepy.$instance.globalData.gData.wgks.push({ // 存数据
+                    xsxm: this.xm,
+                    xsxh: this.xh,
+                    wgxw: this.infos,
+                    wglx: '1',
+                });
+                if (!isNaN(this.index) && this.index !== null) {
+                    this.methods.getImgIds(this, wepy.$instance.globalData.gData.wgks.length - 1, 1);
+                } else {
+                    this.methods.getImgIds(this, wepy.$instance.globalData.gData.wgks.length - 1, 2); // 首次添加
+                }
+            }
+        },
+        tapToPreviewImage(index) {
+            wepy.previewImage({
+                current: this.chosedImgs[index], // 当前显示图片的http链接
+                urls: this.chosedImgs, // 需要预览的图片http链接列表
+            });
+        },
+        async getImgIds(_this, index, indexs) {
+            tips.loading('上传中');
+            // if (!_this.chosedImgs.length && index !== 0) return;
+            const totalCount = _this.chosedImgs.length || 0;
+            if (!totalCount) {
+                tips.loaded();
+                if (!isNaN(index) && index !== null) { // 非首次添加
+                    wepy.navigateBack({
+                        delta: 1,
+                    });
+                } else { // 首次添加 并且没有上传图片
+                    wepy.navigateBack({
+                        delta: 2,
+                    });
+                }
+            }
+            let count = 0;
+            _this.chosedImgs.forEach(async item => {
+                const rupload = await wepy.uploadFile({
+                    url: 'https://kwgl.newaigo.com/a/ws/sys/attachment/uploadFile',
+                    // url: 'http://47.93.31.175:8191/spoc-kwgl/a/ws/sys/attachment/uploadFile',
+                    filePath: item,
+                    header: wepy.$instance.globalData.header,
+                    name: 'files',
+                    formData: {
+                        objectId: null,
+                        type: 'jkwg_img',
+                        fileType: 'all',
+                        dirName: 'images',
+                    },
+                });
+                count++;
+                // rupload.onProgressUpdate(res => {
+                //     console.log('上传进度', res.progress);
+                //     console.log('已经上传的数据长度', res.totalBytesSent);
+                //     console.log('预期需要上传的数据总长度', res.totalBytesExpectedToSend);
+                // });
+                /*
+                * 数据结构
+                * 单个学生对应了他自己的图片id
+                * 在此所获取的图片id 对应了相对应的学生index
+                * 存到全局中去
+                * */
+                _this.attList += JSON.parse(rupload.data).data.id + ',';
+                if (count === totalCount) {
+                    tips.loaded();
+                    const _index = index ? index : wepy.$instance.globalData.gData.wgks.length - 1;
+                    console.log(index, _index, wepy.$instance.globalData.gData.wgks[_index]);
+                    wepy.$instance.globalData.gData.wgks[_index].attList = _this.attList;
+                    wepy.$instance.globalData.gData.wgks[_index].chosedImgs = _this.chosedImgs;
+                    wepy.navigateBack({
+                        delta: indexs,
+                    });
+                };
+            });
+        },
+        async getImg(_this, data) {
+            data.split(',').forEach(async item => {
+                const rdata = await sys.getPath({ id: item, });
+                if (rdata.statusCode === 200) {
+                    _this.chosedImgs.push(rdata.data.data.path);
+                    _this.$apply();
+                } else {
+                    tips.error('图片获取失败');
+                }
+            });
+        },
+    };
+    async onLoad(query) {
+        this.infos = null;
+        this.chosedImgs = [];
+        this.xm = query.xm;
+        this.xh = query.xh;
+        this.wgxw = query.wgxw ? query.wgxw : '';
+        this.types = query.types;
+        this.infos = this.wgxw;
+        this.index = query.index ? Number(query.index) : null;
+        if (query.index) this.chosedImgs = wepy.$instance.globalData.gData.wgks[this.index].chosedImgs || [];
+        this.from = query.from;
+        if (this.from) {
+            this.imgTitle = '违规图片';
+            tips.loading('加载中');
+
+            console.log('query.src', query.src);
+            query.src.split(',').forEach(item => {
+                // item && this.chosedImgs.push('http://47.93.31.175:8191' + item);
+                item && this.chosedImgs.push('https://kwgl.newaigo.com' + item);
+            });
+            tips.loaded();
+        }
+        this.$apply();
+    };
+    onUnload() {
+        this.chosedImgs = [];
+    };
+};
+</script>

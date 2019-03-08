@@ -1,0 +1,111 @@
+<template>
+    <view class="large-list-item">
+        <view class="info-container ml30 mr30">
+            <view class="info-container-title">
+                <view>{{title}}</view>
+                <view 
+                    wx-if="{{status}}"
+                    style="color:{{status === '已提交' ? '#00C700' : '#FF2A2A'}}; float: {{floatLeft ? 'right' : ''}}">
+                    （{{status}}）
+                </view>
+                <view
+                    wx-if="{{timming}}"
+                    style="color:{{timming === '已开始' ? '#00C700' : (timming === '未开始' ? '#F1A100' : '#999')}}; float: {{floatLeft ? 'right' : ''}}">
+                    （{{timming}}）
+                </view>
+            </view>
+            <view class="info-container-time column-between">
+                <view>
+                    <text>考试时间： </text>
+                    <text>{{duration}}</text>
+                </view>
+                <text wx-if="{{!showArrow}}">123</text>
+            </view>
+            <view class="info-container-time column-between">
+                <view>
+                    <text>考试地点： </text>
+                    <text>{{jsmc}}</text>
+                </view>
+            </view>
+        </view>
+        <image wx-if="{{showArrow}}" src="../images/arrow.png" style="top: {{top}};"/>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class LargeListItem extends wepy.component {
+    props = {
+        title: {
+            type: String,
+            required: true,
+        },
+        duration: {
+            type: String,
+            required: true,
+        },
+        status: { // 是否提交
+            type: [ String, Number, ],
+            default: '',
+        },
+        timming: {
+            type: [ String, Number, ],
+            default: 0,
+        },
+        showArrow: {
+            type: Boolean,
+            default: true,
+        },
+        floatLeft: {
+            type: Boolean,
+            default: false,
+        },
+        top: {
+            type: String,
+            default: '46rpx',
+        },
+        jsmc: {
+            type: 'String',
+            default: '',
+        },
+    };
+};
+</script>
+
+<style lang="less">
+    @import '../styles/base.less';
+    .large-list-item {
+        position: relative;
+        .info-container {
+            font-size: 0;
+            padding-top: 16rpx;
+            .info-container-title {
+                color: @000;
+                height: 48rpx;
+                font-size: 34rpx;
+                display: block;
+                margin-bottom: 10rpx;
+                >view {
+                    display: inline-block;
+                    font-size: 34rpx;
+                    display: inline-block;
+                    height: 48rpx;
+                    line-height: 48rpx;
+                }
+            }
+            .info-container-time {
+                color: @888;
+                font-size: 26rpx;
+                height: 44rpx;
+            }
+        }
+        image {
+            position: absolute;
+            width: 16rpx;
+            height: 26rpx;
+            right: 30rpx;
+            top: 46rpx;
+        }
+    }
+</style>

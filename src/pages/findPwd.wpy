@@ -1,0 +1,187 @@
+<style lang="less">
+    @import '../styles/base';
+    .find-pwd-boss {
+        .find-pwd-container {
+            padding: 0 30rpx;
+            background-color: @fff;
+            clear: both;
+            > view {
+                position: relative;
+                height: 100rpx;
+                line-height: 100rpx;
+                box-sizing: border-box;
+                color: @333;
+                font-size: 32rpx;
+                input { 
+                    text-align: right;
+                    float: right;
+                    height: 100rpx;
+                    line-height: 100rpx;
+                    width: 450rpx;
+                    display: inline-block;
+                    background: #fff;
+                    vertical-align: middle;
+                }
+            }
+        }
+    }
+</style>
+
+<template>
+    <view class="find-pwd-boss">
+        <view class="find-pwd-container">
+            <view>
+                　原密码
+                <input type="text" placeholder="请填写原密码" password="true" bindinput="oldPass" placeholder-style="font-size: 32rpx; color:#CCC;text-align:right" style="color:#333;"/>
+            </view>
+            <view>
+                　新密码
+                <input type="text" placeholder="请填写新密码" password="true" bindinput="newPass" placeholder-style="font-size: 32rpx; color:#CCC;text-align:right" style="color:#333;"/>
+            </view>
+            <view>
+                确认密码
+                <input type="text" placeholder="请再次填写确认" password="true" bindinput="confirmPass" placeholder-style="font-size: 32rpx; color:#CCC;text-align:right" style="color:#333;"/>
+            </view>
+        </view>
+        <text style='color:red;margin-left:30rpx' wx:if='{{!isSame}}'>两次输入不一致</text>
+        <text style='color:red;margin-left:30rpx' >{{mess}}</text>
+        <button type="primary" @tap="amendPass" class="mr30 ml30 mt180">确定</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import sys from '../api/sys';
+import tips from 'utils/tips';
+import login from 'api/login';
+
+
+export default class FindPwd extends wepy.page {
+    config = {
+        navigationBarTitleText: '修改密码',
+    }
+
+    data = {
+        loginName: '',
+        oldPwd: '',
+        newPwd: '',
+        isSame: true,
+        mess: '',
+        again: '',
+        isFirst: false,
+    };
+
+    methods = {
+        oldPass(val) {
+            this.oldPwd = val.detail.value;
+        },
+        newPass(val) {
+            this.newPwd = val.detail.value;
+        },
+        confirmPass(val) {
+            this.again = val.detail.value;
+            this.isSame = val.detail.value === this.newPwd;
+        },
+        amendPass() {
+            if (!this.oldPwd || !this.loginName || !this.newPwd || !this.again) {
+                tips.error('请输入密码');
+                return;
+            };
+            if (!this.isSame) return;
+            const that = this;
+            const obj = {
+                lgoinName: this.loginName,
+                oldPwd: this.oldPwd,
+                newPwd: this.newPwd,
+            };
+            sys.amendPassW(obj).then(res => {
+                if (res.message === '用户密码错误') {
+                    tips.error(res.message);
+                } else {
+                    tips.success('修改成功', 300).then(res => {
+                        if (that.isFirst) {
+                            that.methods.tapLogin(that.data);
+                        } else {
+                            that.methods.tapToLogout();
+                        };
+                    });
+                }
+            });
+        },
+        async tapLogin(that) {
+            tips.loading('登录中');
+            const data = {
+                username: that.loginName,
+                password: that.newPwd,
+            };
+            const rdatas = await login.login(data);
+            tips.loaded();
+            if (rdatas.statusCode === 200) {
+                wepy.$instance.globalData.uesrNum = that.username;
+                /*
+                * 拿到cookie中所需要的信息
+                */
+                const headers = rdatas.header['Set-Cookie'] || rdatas.header['set-cookie'];
+                headers.split(';').forEach(item => {
+                    if (item.startsWith('spoc.session.id')) {
+                        wepy.$instance.globalData.header.Cookie = item;
+                    }
+                });
+                const rInfo = await sys.userInfo();
+
+                if (rInfo.statusCode === 200) {
+                    /*
+                    * 108 监考老师
+                    * 109 巡考老师
+                    * 110 学生
+                    */
+                    tips.loaded();
+                    that.loginName = that.newPwd = '';
+                    if (rInfo.data.data.roleId.includes('108')) {
+                        wepy.redirectTo({ url: 'invigilateManage', });
+                    } else if (rInfo.data.data.roleId.includes('109')) {
+                        wepy.redirectTo({ url: 'textRecord', });
+                    } else if (rInfo.data.data.roleId.includes('110')) {
+                        wepy.redirectTo({ url: 'examPlan', });
+                    } else {
+                        tips.modal('该用户未经授权');
+                    }
+                } else {
+                    tips.error(rInfo.message);
+                }
+            } else {
+                tips.error(rdatas.message);
+            }
+        },
+        async tapToLogout() {
+            tips.loading('退出登录中');
+            const rdata = await login.logout();
+            tips.loaded();
+            if (rdata.statusCode === 200) {
+                wepy.$instance.globalData.header = {};
+                wepy.reLaunch({
+                    url: 'login',
+                });
+            } else {
+                tips.error(rdata.message);
+            }
+        },
+    };
+    onLoad(op) {
+        this.oldPwd = '';
+        this.newPwd = '';
+        this.again = '';
+        this.loginName = '';
+        if (op.userName) {
+            this.isFirst = true;
+            this.loginName = op.userName;
+        } else {
+            this.isFirst = false;
+            sys.userInfo().then(res => {
+                this.loginName = res.data.data.loginName;
+                this.$apply();
+            });
+        };
+    };
+};
+</script>

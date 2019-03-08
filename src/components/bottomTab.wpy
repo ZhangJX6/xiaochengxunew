@@ -1,0 +1,106 @@
+<style lang="less">
+    @import '../styles/base';
+    .bottom-tab-boss {
+        height: 98rpx;
+        width: 100%;
+        box-sizing: border-box;
+        padding-top: 15rpx;
+        background-color: @fff;
+        border-top: solid 1rpx @e5;
+        .bottom-tab-container {
+            height: 100%;
+            text-align: center;
+            font-size: 0;
+            image {
+                display: block;
+                margin: 0 auto;
+            }
+            .bottom-tab-title {
+                color: @ccc;
+                font-size: 20rpx;
+                display: inline-block;
+            }
+            .bottom-tab-title-active {
+                color: @proColor;
+            }
+        }
+    }
+</style>
+
+<template>
+    <view class="bottom-tab-boss column-around {{position}}">
+        <view
+            class="bottom-tab-container"
+            wx:for="{{list}}"
+            wx:key="index"
+            wx:for-item="item"
+            wx:for-index="index"
+            @tap="tapSwitchBottomBar({{index}})"
+            style="width: {{widths}}%;">
+            <image wx:if="{{int === index}}" src="{{item.ac_src}}" style="width: 24px; height: 24px;"></image>
+            <image wx:else src="{{item.src}}" style="width: 24px; height: 24px;"></image>
+            <view class="bottom-tab-title {{int === index ? 'bottom-tab-title-active' : ''}}">{{item.title}}</view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class BottomTab extends wepy.component {
+    props = {
+        position: {
+            type: [ String, Array, ],
+            default: '',
+        },
+        types: {
+            type: String,
+            default: 'jiankao',
+        },
+        int: {
+            type: [ String, Number, ],
+            default: 0,
+        },
+        listA: {
+            type: Array,
+            default: [
+                {
+                    title: '监考安排',
+                    src: '../images/JKanpai.png',
+                    ac_src: '../images/ac_JKanpai.png',
+                },
+                // {
+                //     title: '监考记录',
+                //     src: '../images/JKjilu.png',
+                //     ac_src: '../images/ac_JKjilu.png',
+                // },
+                {
+                    title: '个人中心',
+                    src: '../images/Shape.png',
+                    ac_src: '../images/Shape1.png',
+                },
+            ],
+        },
+    };
+    data = {
+        list: [],
+        widths: 0,
+    };
+    methods = {
+        tapSwitchBottomBar(index) {
+            this.int = index;
+            this.$emit('tabChanges', this.int);
+        },
+    };
+
+    events = {
+    };
+
+    onLoad() {
+        // 监考 与 巡考
+        this.list = this.types === 'jiankao' ? this.listA : [];
+        this.widths = (1 / this.list.length * 100).toFixed(2);
+        this.$apply();
+    };
+};
+</script>

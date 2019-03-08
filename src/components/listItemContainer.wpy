@@ -1,0 +1,39 @@
+<template>
+    <view class="list-item-container {{classes}}">
+        <slot></slot>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+
+export default class ListItemContainer extends wepy.component {
+    props = {
+        classes: {
+            type: String,
+            default: 'middle',
+        },
+    };
+};
+</script>
+
+<style lang="less">
+    @import '../styles/base';
+    .list-item-container {
+        background-color: @fff;
+        &.huge {
+            height: 180rpx;
+            border-bottom: solid 1px @e5;
+        }
+        &.large {
+            height: 120rpx;
+            border-bottom: solid 1px @e5;
+        }
+        &.middle {
+            height: 90rpx;
+        }
+        &.small {
+            height: 60rpx;
+        }
+    };
+</style>

@@ -1,0 +1,94 @@
+<style lang="less" src="./styles/base.less"></style>
+<style lang="less">
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+</style>
+
+<script>
+import wepy from 'wepy';
+import util from 'utils/util';
+import 'wepy-async-function';
+
+export default class extends wepy.app {
+    config = {
+        pages: [
+            'pages/login', // 登录
+            'pages/invigilateDetail', // 监考详情
+            'pages/invigilateForm', // 巡考登记表
+            'pages/checkInvigilateForm', // 监考登记表_查看详情
+            'pages/violationStudent', // 违规考生
+            'pages/absentStudent', // 缺考考生
+            'pages/registerSurface', // 监考登记表
+            'pages/invigilateManage', // 监考安排
+            'pages/findPwd', // 找回密码
+            'pages/textRecord', // 巡考登记
+            'pages/addStudent', // 添加考生
+            'pages/inputInfo',
+            'pages/summarize',
+            'pages/inviSummrizeForm',
+            'pages/examPlan',
+            'pages/personCenter',
+            'pages/checkInfor',
+            'pages/missStudent',
+            'pages/addFraudStudent', // 违规学生
+            'pages/violationStudentXk', // 违规学生
+        ],
+        window: {
+            backgroundTextStyle: 'light',
+            navigationBarBackgroundColor: '#0290FF',
+            navigationBarTitleText: '考务系统',
+            navigationBarTextStyle: 'white',
+        },
+    };
+
+    globalData = {
+        userInfo: null,
+        baseUrl: 'https://kwgl.newaigo.com/a/ws/kwgl',
+        baseUrlSys: 'https://kwgl.newaigo.com/a/ws/sys',
+        // baseUrl: 'http://47.93.31.175:8191/spoc-kwgl/a/ws/kwgl',
+        // baseUrlSys: 'http://47.93.31.175:8191/spoc-kwgl/a/ws/sys',
+        header: {},
+        gData: {
+            wgks: [],
+            qkks: [],
+            attListkc: '', // 考场上传图片src
+            kcImgList: [], // 显示考场上传的图片
+        },
+        uesrNum: '',
+        tempData: '',
+        fraudInfo: {
+        },
+    };
+
+    constructor() {
+        super();
+        this.use('requestfix');
+        this.use('promisify');
+    }
+
+    onLaunch() {
+        // this.getUserInfo();
+        util.updata();
+    };
+
+    getUserInfo(cb) {
+        const that = this;
+        if (this.globalData.userInfo) {
+            return this.globalData.userInfo;
+        }
+        wepy.getUserInfo({
+            success(res) {
+                that.globalData.userInfo = res.userInfo;
+                console.log('globalData.userInfo', that.globalData.userInfo);
+                cb && cb(res.userInfo);
+            },
+        });
+    };
+};
+</script>

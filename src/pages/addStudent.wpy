@@ -1,0 +1,249 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .add-student-boss {
+        position: relative;
+        .add-student-input-container {
+            width: 100%;
+            height: 88rpx;
+            overflow: hidden;
+            position: relative;
+            box-sizing: border-box;
+            background-color: @proColor;
+            .add-student-input-area {
+                width: 100%;
+                height: 68rpx;
+                display: block;
+                box-sizing: border-box;
+                background-color: @fff;
+                border-radius: 10rpx;
+                padding-left: 48rpx;
+            }
+            .add-student-icon {
+                position: absolute;
+                left: 40rpx;
+                top: 20rpx;
+                z-index: 21;
+            }
+        }
+        .add-student-select-student {
+            padding-bottom: 102rpx;
+            .add-student-select-student-item {
+                >view {
+                    width: 100%;
+                    display: flex;
+                    display: -webkit-flex;
+                    justify-content: space-between;
+                    padding-top: 20rpx;
+                    box-sizing: border-box;
+                }
+            }
+        }
+    }
+    .add-student-select-student-item-info-container {
+        view:nth-of-type(1) {
+            color: @333;
+            font-size: 32rpx;
+            line-height: 45rpx;
+        }
+        view:nth-of-type(2) {
+            color: @999;
+            font-size: 26rpx;
+            line-height: 37rpx;
+        }
+    }
+</style>
+
+<template>
+    <view class="add-student-boss">
+        <view class="add-student-input-container pl30 pr30 mb30">
+            <icon type="search" size='15' class="add-student-icon"></icon>
+            <input
+                type='text'
+                maxlength="25"
+                confirm-type='search'
+                class="add-student-input-area"
+                placeholder="请输入学生姓名/学号"
+                bindinput="onclickToSearch"
+                bindconfirm="onclickToSearch"
+                placeholder-style="font-size: 32rpx;"/>
+        </view>
+        <view class="add-student-select-student" wx:if = "{{types === 'qk'}}">
+            <repeat for="{{listArr}}" key="index" index="index" item="item">
+                <ListItemContainer classes="large" class="add-student-select-student-item pr30 pl30">
+                    <view  @tap="onclickChangerRadio({{index}}, {{item.checked}})">
+                        <view class="add-student-select-student-item-info-container">
+                            <view>{{item.xm}}</view>
+                            <view>{{item.xh}}</view>
+                        </view>
+                        <radio checked="{{item.checked}}" color="#0290FF"/>
+                    </view>
+                </ListItemContainer>
+            </repeat>
+        </view>
+        <view class="add-student-select-student" wx:if = "{{types === 'wg'}}">
+            <repeat for="{{listArr}}" key="index" index="index" item="item">
+                <ListItemContainer classes="large" class="add-student-select-student-item pr30 pl30">
+                    <view  @tap="onclickAddWG({{item.xm}}, {{item.xh}})" style="position:relative">
+                        <view class="add-student-select-student-item-info-container">
+                            <view>{{item.xm}}</view>
+                            <view>{{item.xh}}</view>
+                        </view>
+                        <image src="../images/arrow.png" class="icon-arrow-right middle" style="top: 50rpx;" />
+                    </view>
+                </ListItemContainer>
+            </repeat>
+        </view>
+        <view style="width:100%; height: 10rpx;"></view>
+        <button wx:if = "{{types === 'qk'}}" type="{{checekdLength === '取消' ? 'default' : 'primary'}}" class="fix-bottom" @tap="tapToAddStu">{{checekdLength}}</button>
+    </view>    
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import ListItemContainer from 'components/listItemContainer';
+import Invigilate from 'api/invigilate';
+import tourTest from '../api/tourTest';
+
+export default class AddStudent extends wepy.page {
+    data = {
+        name: '缺考考生',
+        types: null, // qk wg
+        kcapid: null,
+        from: null,
+        xm: '',
+        listArr: [],
+        id: null,
+        xkryId: null,
+    };
+
+    components = {
+        ListItemContainer: ListItemContainer,
+    };
+
+    computed = {
+        checekdLength() {
+            let count = 0;
+            this.listArr.forEach(item => {
+                if (item.checked) {
+                    count++;
+                }
+            });
+            return `(${count}/${this.listArr.length})确认`;
+        },
+    };
+
+    methods = {
+        /*
+        * 搜索学生
+        */
+        onclickToSearch(e) {
+            this.xm = e.detail.value;
+            console.log(this.xm);
+            this.methods.getListStudent(this);
+        },
+        /*
+        * 选取学生
+        */
+        onclickChangerRadio(index, val, e) {
+            this.listArr[index].checked = !val;
+        },
+        /*
+        * 添加违规学生
+        */
+        onclickAddWG(val1, val2) {
+            if (this.from) {
+                wepy.navigateTo({ url: `violationStudentXk?types=add&xm=${val1}&xh=${val2}&xkryId=${this.xkryId}`, });
+                return;
+            };
+            wepy.navigateTo({ url: `violationStudent?types=add&xm=${val1}&xh=${val2}`, });
+        },
+        /*
+        * 确认添加学生
+        */
+        tapToAddStu() {
+            const data = [];
+
+            this.listArr.forEach(item => {
+                if (item.checked) {
+                    item.wglx = '0';
+                    item.xsxm = item.xm;
+                    item.xsxh = item.xh;
+                    data.push(item);
+                }
+            });
+
+            if (this.name === '缺考考生') {
+                wepy.$instance.globalData.gData.qkks = data;
+                wepy.navigateBack({ delta: 1, });
+            }
+        },
+        /*
+        * 获取学生列表
+        */
+        async getListStudent(that) {
+            const data = {
+                kcapId: that.kcapid,
+                xm: that.xm,
+            };
+            const data1 = {
+                xkryId: that.kcapid,
+                sort: that.xm,
+            };
+            tips.loading('加载中');
+            let rdata = '';
+            if (that.from) {
+                rdata = await tourTest.searchStudent(data1);
+            } else {
+                rdata = await Invigilate.listStudent(data);
+            }
+            tips.loaded();
+            if (rdata.statusCode === 200) {
+                that.listArr = rdata.data.data;
+                that.listArr.forEach(item => { item.checked = false; });
+                if (that.types === 'qk') {
+                    wepy.$instance.globalData.gData.qkks.forEach(item => {
+                        that.listArr.forEach((items, index) => {
+                            if (item.xm === items.xm && item.xh === items.xh) that.listArr[index].checked = true;
+                        });
+                    });
+                    wepy.$instance.globalData.gData.wgks.forEach(item => {
+                        that.listArr.forEach((items, index) => {
+                            if (item.xm === items.xm && item.xh === items.xh) that.listArr.splice(index, 1);
+                        });
+                    });
+                }
+                if (that.types === 'wg') {
+                    wepy.$instance.globalData.gData.qkks.forEach(item => {
+                        that.listArr.forEach((items, index) => {
+                            if (item.xm === items.xm && item.xh === items.xh) that.listArr.splice(index, 1);
+                        });
+                    });
+                    wepy.$instance.globalData.gData.wgks.forEach(item => {
+                        that.listArr.forEach((items, index) => {
+                            if (item.xsxm === items.xm && item.xsxh === items.xh) that.listArr.splice(index, 1);
+                        });
+                    });
+                }
+            } else {
+                tips.error(rdata.message);
+            }
+            that.$apply();
+        },
+    };
+
+    onLoad(query) {
+        this.from = query.from ? query.from : '';
+        this.name = query.name ? query.name : '';
+        this.id = query.id ? query.id : '';
+        this.types = this.name === '缺考考生' ? 'qk' : 'wg';
+        this.kcapid = query.kcapid ? query.kcapid : query.xkry;
+        this.xkryId = query.xkryId ? query.xkryId : '';
+        this.$apply();
+        wepy.setNavigationBarTitle({
+            title: this.name,
+        });
+        this.methods.getListStudent(this);
+    };
+};
+</script>

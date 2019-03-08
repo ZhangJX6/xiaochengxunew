@@ -1,0 +1,229 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .register-surface-boss {
+        padding-top: 30rpx;
+       .register-surface-container {
+           background-color: @fff;
+           .register-surface-list-item {
+               line-height: 90rpx;
+               view:nth-of-type(1) {
+                   color: @000;
+                   font-size: 34rpx;
+                   white-space: nowrap;
+               }
+               view:nth-of-type(2) {
+                   color: @888;
+                   font-size: 34rpx;
+               }
+           }
+           .has-icon-arrow {
+                position: relative;
+           }
+       }
+    }
+    .register-surface-list-title {
+        color: @999;
+        font-size: 26rpx;
+        height: 60rpx;
+        background-color: @fff;
+    }
+    .button-add-stu {
+        color: @addColor;
+        height: 90rpx;
+        text-align: center;
+        line-height: 90rpx;
+        font-size: 28rpx;
+    }
+    .popup-article-text-area {
+        width: 100%;
+        font-size: 34rpx;
+        box-sizing: border-box;
+        background-color: @fff;
+    }
+    .register-input {
+        color: @999;
+        text-align: right;
+    }
+</style>
+
+<template>
+    <view class="register-surface-boss pb95">
+        <view class="mb30 register-surface-container">
+            <ListItemContainer>
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>应考人数</view>
+                    <input class="register-input" type="number" value="{{stuNum}}人" disabled="true" />
+                </view>
+            </ListItemContainer>
+            <ListItemContainer>
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>实考人数</view>
+                    <input class="register-input" type="number" value="{{nums}}人" disabled="true"/>
+                </view>
+            </ListItemContainer>
+        </view>
+
+        <view class="mb30 register-surface-container">
+            <view class="ml30 mr30 column-between register-surface-list-title">缺考考生</view>
+                
+            <repeat for="{{listArr1}}" key="index" index="index" item="item">
+                <ListItemContainer class="has-icon-arrow">
+                    <view class="ml30 mr30 column-between register-surface-list-item">
+                        <view>{{item.xsxm}}</view>
+                        <view>{{item.xsxh}}</view>
+                    </view>
+                </ListItemContainer>
+            </repeat>
+            <view class="button-add-stu" @tap="tapToAddAbsent">添加</view>
+        </view>
+
+        <view class="mb30 register-surface-container">
+            <view class="ml30 mr30 column-between register-surface-list-title">违规考生</view>
+
+            <repeat for="{{listArr2}}" key="index" index="index" item="item">
+                <ListItemContainer class="has-icon-arrow">
+                    <view class="ml30 mr30 column-between register-surface-list-item" @tap="tapToViolationStudent({{item}}, {{index}})">
+                        <view>{{item.xsxm}}</view>
+                        <view class="mr30">{{item.xsxh}}</view>
+                    </view>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </ListItemContainer>
+             </repeat>
+            <view class="button-add-stu" @tap="tapToAddViolation">添加</view>
+        </view>
+
+        <view class="mb30 register-surface-container">
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item" @tap="tapToAddArticle">
+                    <view>考场记事</view>
+                    <view class="mr30">{{article ? '修改' : '添加'}}</view>
+                </view>
+                <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </ListItemContainer>
+        </view>
+        <view style="width:100%; height: 10rpx;"></view>
+        <button type="primary" class="fix-bottom" @tap="tapToSubmit">提交</button>
+
+    </view>    
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import ListItemContainer from 'components/listItemContainer';
+import Popup from 'components/popup';
+import AddStudent from 'components/addStudent';
+import Invigilate from 'api/invigilate';
+
+export default class RegisterSurface extends wepy.page {
+    data = {
+        stuNum: 0, // 学生人数
+        kcapid: null,
+        jkryId: null, // 监考id
+        title: '监考登记表',
+        article: '',
+        listArr1: [],
+        listArr2: [],
+    };
+    config = {
+        navigationBarTitleText: '监考登记表',
+    };
+    components = {
+        ListItemContainer: ListItemContainer,
+        PopupAbsent: Popup,
+        PopupBreak: Popup,
+        PopupArticle: Popup,
+        AddStudentAbsent: AddStudent,
+        AddStudentBreak: AddStudent,
+    };
+    computed = {
+        nums() {
+            const num = this.stuNum - this.listArr1.length;
+            return num || 0;
+        },
+    };
+    watch = {
+
+    };
+    methods = {
+        // 添加缺考考生
+        tapToAddAbsent() {
+            wepy.navigateTo({ url: `addStudent?name=缺考考生&kcapid=${this.kcapid}`, });
+        },
+        // 添加违规考生
+        tapToAddViolation() {
+            wepy.navigateTo({ url: `addStudent?name=违规考生&kcapid=${this.kcapid}`, });
+        },
+        // 查看违规考生
+        tapToViolationStudent(item, index) {
+            console.log('index', index);
+            wepy.navigateTo({
+                url: `violationStudent?xm=${item.xsxm}&xh=${item.xsxh}&wgxw=${item.wgxw}&types=add&index=${String(index)}`,
+            });
+        },
+        /*
+        * 点击输入考场记事
+        */
+        tapToAddArticle() {
+            wepy.navigateTo({ url: `inputInfo?names=考场纪事&kcapid=${this.kcapid}`, });
+        },
+
+        // 点击提交
+        async tapToSubmit() {
+            const data = {};
+            data.kwWgjlList = [ ...wepy.$instance.globalData.gData.qkks, ...wepy.$instance.globalData.gData.wgks, ];
+            data.kcjs = wepy.$instance.globalData.gData.kcjs; // 考场纪事
+            data.qkrs = wepy.$instance.globalData.gData.qkks.length; // 缺考人数
+            data.attList = wepy.$instance.globalData.gData.attListkc; // 考场图片
+            data.skrs = this.nums; // 实考人数
+            data.jkryId = this.jkryId;
+            data.kwWgjlList.forEach(item => {
+                delete item.checked;
+                delete item.xm;
+                delete item.xh;
+                delete item.chosedImgs;
+            });
+            console.log('data', data);
+            const rdata = await Invigilate.save(data);
+            if (rdata.statusCode === 200) {
+                tips.success('添加成功');
+                data.kwWgjlList.forEach(item => {
+                    item.xsxm = item.xm;
+                    item.xsxh = item.xh;
+                    delete item.xsxm;
+                    delete item.xsxh;
+                    delete item.chosedImgs;
+                });
+                wepy.$instance.globalData.gData.kcjs = null;
+                wepy.$instance.globalData.gData.qkks = wepy.$instance.globalData.gData.wgks = wepy.$instance.globalData.gData.kcImgList = [];
+                wepy.$instance.globalData.gData.attListkc = '';
+                wepy.navigateBack({ delta: 2, });
+            } else {
+                tips.error(rdata.message);
+            }
+        },
+    };
+    onLoad(query) {
+        this.kcapid = query.kcapid;
+        this.stuNum = query.stuNum;
+        this.jkryId = query.jkryId;
+        wepy.setNavigationBarTitle({
+            title: this.title,
+        });
+        this.$apply();
+    };
+    async onShow() {
+        console.log('onShow', wepy.$instance.globalData.gData.wgks);
+        this.listArr1 = wepy.$instance.globalData.gData.qkks ? wepy.$instance.globalData.gData.qkks : []; // 获取缺考考生
+        this.listArr2 = wepy.$instance.globalData.gData.wgks ? wepy.$instance.globalData.gData.wgks : []; // 获取违规考生
+        this.article = wepy.$instance.globalData.gData.kcjs ? wepy.$instance.globalData.gData.kcjs : ''; // 获取考场纪事
+    };
+    onUnload() {
+        wepy.$instance.globalData.gData.qkks = [];
+        wepy.$instance.globalData.gData.kcImgList = [];
+        wepy.$instance.globalData.gData.wgks = [];
+        wepy.$instance.globalData.gData.kcjs = '';
+        wepy.$instance.globalData.gData.attListkc = '';
+    };
+};
+</script>

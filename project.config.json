@@ -1,0 +1,124 @@
+{
+	"description": "A WePY project",
+	"setting": {
+		"urlCheck": false,
+		"es6": false,
+		"postcss": true,
+		"minified": true,
+		"newFeature": true,
+		"nodeModules": false
+	},
+	"compileType": "miniprogram",
+	"appid": "wxf0886fe174d586fd",
+	"projectname": "wxpy",
+	"miniprogramRoot": "dist/",
+	"packOptions": {
+		"ignore": [
+			{
+				"type": "file",
+				"value": "styles/util.lss"
+			}
+		]
+	},
+	"libVersion": "2.6.1",
+	"condition": {
+		"search": {
+			"current": -1,
+			"list": []
+		},
+		"conversation": {
+			"current": -1,
+			"list": []
+		},
+		"plugin": {
+			"current": -1,
+			"list": []
+		},
+		"game": {
+			"list": []
+		},
+		"miniprogram": {
+			"current": 3,
+			"list": [
+				{
+					"id": 0,
+					"name": "巡考登记",
+					"pathName": "pages/textRecord",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "text",
+					"pathName": "pages/invigilateManage",
+					"query": ""
+				},
+				{
+					"id": 2,
+					"name": "监考登记表",
+					"pathName": "pages/invigilateForm",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "登录",
+					"pathName": "pages/login",
+					"query": ""
+				},
+				{
+					"id": 4,
+					"name": "巡考总结",
+					"pathName": "pages/invSummarize",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "总结",
+					"pathName": "pages/summarize",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "巡考总结表",
+					"pathName": "pages/inviSummrizeForm",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "考试安排",
+					"pathName": "pages/examPlan",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "成绩查询",
+					"pathName": "pages/gradeQuery",
+					"query": ""
+				},
+				{
+					"id": 9,
+					"name": "个人中心",
+					"pathName": "pages/personCenter",
+					"query": "from=1&name=高师兄"
+				},
+				{
+					"id": 10,
+					"name": "个人中心查询",
+					"pathName": "pages/checkInfor",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "巡考总结",
+					"pathName": "pages/missStudent",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "添加违规学生",
+					"pathName": "pages/addFraudStudent",
+					"query": ""
+				}
+			]
+		}
+	}
+}

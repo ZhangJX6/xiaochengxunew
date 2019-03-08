@@ -1,0 +1,178 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .login-boss {
+        background-color: @fff;
+        width: 100%;
+        height: 100%;
+        .login-title {
+            text-align: center;
+            padding-top: 100rpx;
+            margin-bottom: 200rpx;
+            color: #030303;
+            font-size: 36rpx;
+        }
+        .login-user-pwd {
+            >view {
+                height: 100rpx;
+                line-height: 100rpx;
+                box-sizing: border-box;
+                overflow: hidden;
+                border-bottom: solid 1rpx #979797;
+                position: relative;
+                padding-left: 135rpx;
+                text {
+                    color: #333333;
+                    font-size: 32rpx;
+                    display: inline-block;
+                    position: absolute;
+                    left: 0;
+                }
+                input {
+                    display: inline-block;
+                    vertical-align: middle;
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+        }
+        .login-button {
+            color: #fff;
+            width: 670rpx;
+            height: 88rpx;
+            text-align: center;
+            line-height: 88rpx;
+            background-color: @proColor;
+            border-radius: 6px;
+            margin-top: 100rpx;
+        }
+    }
+</style>
+<template>
+  <view class="login-boss">
+        <view class="login-title">期末考核全流程监控系统</view>
+        <view class="login-user-pwd ml30 mr30">
+                <view>
+                    <text>用户名</text>
+                    <input
+                        id="name"
+                        type="text"
+                        value="{{username}}"
+                        confirm-type="next"
+                        style="color:#333;"
+                        bindinput="inputUsername"
+                        placeholder="请输入用户名"
+                        placeholder-style="font-size: 32rpx; color:#CCCCCC;"/>
+                </view>
+                <view>
+                    <text space="nbsp">密   码</text>
+                    <input
+                        id="pass"
+                        type="text"
+                        confirm-type="go"
+                        value="{{password}}"
+                        bindinput="inputPassword"
+                        bindconfirm="tapLogin"
+                        password="true"
+                        placeholder="请输入密码"
+                        style="color:#333;"
+                        placeholder-style="font-size: 32rpx; color:#CCCCCC;"/>
+                </view>
+        </view>
+        <view class="login-button ml30 mr30" @tap="tapLogin">登录</view>
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+// import util from 'utils/util';
+import login from 'api/login';
+import Sys from 'api/sys';
+
+export default class Index extends wepy.page {
+    config = {
+        navigationBarBackgroundColor: '#fff',
+        navigationBarTitleText: '',
+    }
+
+    data = {
+        username: '',
+        password: '',
+    };
+
+    onShow() {
+        const query = wepy.createSelectorQuery();
+        this.username = query.select('#name').fields()._defaultComponent.data.username;
+        this.password = query.select('#name').fields()._defaultComponent.data.password;
+    };
+
+    methods = {
+        inputUsername(e) {
+            this.username = e.detail.value;
+        },
+        inputPassword(e) {
+            this.password = e.detail.value;
+        },
+        async tapLogin() {
+            if (!this.username) return tips.error('请填写用户名');
+            if (!this.password) return tips.error('请输入密码');
+            tips.loading('登录中');
+
+            const data = {
+                username: this.username,
+                password: this.password,
+            };
+            const rdatas = await login.login(data);
+            tips.loaded();
+            if (rdatas.statusCode === 0 && rdatas.message === '该账号首次登录.') {
+                const headers = rdatas.header['Set-Cookie'] || rdatas.header['set-cookie'];
+                headers.split(';').forEach(item => {
+                    if (item.startsWith('spoc.session.id')) {
+                        wepy.$instance.globalData.header.Cookie = item;
+                    }
+                });
+                tips.confirm('该用户首次登陆, 需要修改密码').then(res => {
+                    wepy.navigateTo({ url: `findPwd?userName=${this.username}`, });
+                });
+                return;
+            }
+            if (rdatas.statusCode === 200) {
+                wepy.$instance.globalData.uesrNum = this.username;
+                /*
+                * 拿到cookie中所需要的信息
+                */
+                const headers = rdatas.header['Set-Cookie'] || rdatas.header['set-cookie'];
+                headers.split(';').forEach(item => {
+                    if (item.startsWith('spoc.session.id')) {
+                        wepy.$instance.globalData.header.Cookie = item;
+                    }
+                });
+                const rInfo = await Sys.userInfo();
+
+                if (rInfo.statusCode === 200) {
+                    /*
+                    * 108 监考老师
+                    * 109 巡考老师
+                    * 110 学生
+                    */
+                    tips.loaded();
+                    this.username = this.password = '';
+                    if (rInfo.data.data.roleId.includes('108')) {
+                        wepy.redirectTo({ url: 'invigilateManage', });
+                    } else if (rInfo.data.data.roleId.includes('109')) {
+                        wepy.redirectTo({ url: 'textRecord', });
+                    } else if (rInfo.data.data.roleId.includes('110')) {
+                        wepy.redirectTo({ url: 'examPlan', });
+                    } else {
+                        tips.modal('该用户未经授权');
+                    }
+                } else {
+                    tips.error(rInfo.message);
+                }
+            } else {
+                tips.error(rdatas.message);
+            }
+        },
+    };
+};
+</script>

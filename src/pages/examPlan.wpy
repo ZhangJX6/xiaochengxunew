@@ -1,0 +1,206 @@
+<style lang='less'>
+    .exam-plan {
+        padding-bottom: 96rpx;
+        .status {
+            float:right;
+            margin: 3px 5px 0 0;
+            font-size: 34rpx;
+            line-height: 48rpx;
+        }
+        .pass {
+            color: #00C700;
+        }
+        .no-pass {
+            color: #FF2A2A;
+        }
+        .miss {
+            color: #B79638
+        }
+        .grade-query {
+            .status {
+                float:right;
+                font-size: 34rpx;
+                line-height: 48rpx;
+            }
+            .pass {
+                color: #00C700;
+            }
+            .no-pass {
+                color: #FF2A2A;
+            }
+            .miss {
+                color: #B79638
+            }
+        }
+    }
+
+</style>
+<template>
+    <view class='exam-plan'>
+        <view wx:if='{{isExamP}}'>
+            <repeat 
+                for="{{planList}}" 
+                key="index" index="index" 
+                item="item">
+                <textRecordC1
+                    :recordDate="item"
+                    :isShowTitle.sync="false"
+                    :dataLength="planList.length"
+                    :index="index"
+                >
+                <taxt slot="status" class="status {{item.status=='1'?'pass':item.status=='2'?'no-pass':'miss'}}">
+                </taxt>
+                </textRecordC1>
+            </repeat>
+        </view>
+        <view class='grade-query' wx:else>
+            <repeat
+                for="{{planList1}}" 
+                key="index" index="index" 
+                item="item">
+                <textRecordC 
+                    :recordDate="item"
+                    :isSc.sync='false'
+                    :dataLength="planList1.length"
+                    :index="index"
+                    @clickCurr.user="clickCurr1"
+                >
+                    <taxt slot="status2" class="status {{item.kszt=='1'?'pass':item.kszt=='2'?'no-pass':'miss'}}">
+                        {{item.kszt == 1 ? '通过' : item.kszt == 2 ? '补考' : item.kszt == 3 ? '缓考' : '免听'}}
+                    </taxt>
+                </textRecordC>
+            </repeat>
+        </view>
+        <bottomTab
+            position="fixed-bottom"
+            :listA='listA'
+            :int='int'
+            @tabChanges.user='tabChanges'
+        ></bottomTab>
+    </view>
+    
+</template>
+<script>
+import wepy from 'wepy';
+import textRecordC from 'components/textRecordC';
+import bottomTab from 'components/bottomTab';
+import student from '../api/student';
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '考试安排',
+        navigationBarTextStyle: '#fff',
+    };
+    components = {
+        textRecordC,
+        textRecordC1: textRecordC,
+        bottomTab,
+    };
+    data = {
+        num: 0,
+        int: 0,
+        name: 1,
+        planList1: [],
+        isExamP: true,
+        planList: [
+            // { school: '育才校区', site: '主楼二层/三层', time: '2018-03-22', status: '未提交', },
+            // { school: '育才校区', site: '主楼二层/三层', time: '2018-03-22', status: '提交', },
+            // { school: '育才校区', site: '主楼二层/三层', time: '2018-03-22', status: '未提交', },
+            // { school: '育才校区', site: '主楼二层/三层', time: '2018-03-22', status: '未提交', },
+            // { school: '育才校区', site: '主楼二层/三层', time: '2018-03-22', status: '提交', },
+        ],
+        listA: [
+            {
+                title: '考试安排',
+                src: '../images/JKanpai.png',
+                ac_src: '../images/ac_JKanpai.png',
+            },
+            // {
+            //     title: '成绩查询',
+            //     src: '../images/JKjilu.png',
+            //     ac_src: '../images/ac_JKjilu.png',
+            // },
+            {
+                title: '个人中心',
+                src: '../images/Shape.png',
+                ac_src: '../images/Shape1.png',
+            },
+        ],
+    };
+    methods = {
+        tabChanges(val) {
+            // wepy.setNavigationBarTitle({
+                // title: val === 0 ? '考试安排' : '成绩查询',
+            // });
+            if (val === 0) {
+                const obj = {};
+                student.getTextPlan(obj).then(res => {
+                    if (res.data.statusCode === 200) {
+                        this.planList = res.data.data;
+                        this.isExamP = true;
+                        this.$apply();
+                    };
+                }).catch(res => {
+                });
+            };
+            // if (val === 1) {
+            //     const obj = {};
+            //     student.getStudentGrade(obj).then(res => {
+            //         if (res.data.statusCode === 200) {
+            //             this.planList1 = res.data.data;
+            //             this.isExamP = false;
+            //             this.$apply();
+            //         };
+            //     }).catch(res => {
+            //     });
+            //     return;
+            // };
+            if (val === 1) {
+                if (this.isExamP) {
+                    this.$com.bottomTab.int = 0;
+                } else {
+                    this.$com.bottomTab.int = 1;
+                };
+                wepy.navigateTo({
+                    url: 'personCenter?from=1',
+                });
+                return;
+            };
+            // wepy.navigateTo({
+            //     url: 'invSummarize',
+            // });
+        },
+    };
+    onLoad(op) {
+        if (op.isQuery === 'true') {
+            const obj = {
+                q: op.q,
+                nd: op.nd,
+            };
+            wepy.setNavigationBarTitle({
+                title: '成绩查询',
+            });
+            student.getStudentGrade(obj).then(res => {
+                this.$com.bottomTab.int = 1;
+                if (res.data.statusCode === 200) {
+                    this.planList1 = res.data.data;
+                    this.isExamP = false;
+                    this.$apply();
+                };
+            }).catch(res => {
+            });
+            return;
+        };
+        const obj = {};
+        student.getTextPlan(obj).then(res => {
+            if (res.data.statusCode === 200) {
+                this.planList = res.data.data;
+                this.$apply();
+            };
+        }).catch(res => {
+        });
+    };
+}
+
+</script>

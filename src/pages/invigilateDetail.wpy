@@ -1,0 +1,194 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .personal-detail-boss {
+        .personal-detail-list-item {
+            height: 60rpx;
+            color: @888;
+            font-size: 28rpx;
+            .exam-classes {
+                line-height: 60rpx;
+            }
+        }
+        .personal-detail-exam-list-item {
+            color: @888;
+            font-size: 28rpx;
+            line-height: 60rpx;
+        }
+        .exam-classes-container {
+            background-color: @fff;
+        }
+        .over-text-view {
+            width: 300rpx;
+        }
+        .center-black-title {
+            color: @000;
+            height: 90rpx;
+            font-size: 28rpx;
+            line-height: 90rpx;
+            text-align: center;
+            background-color: @fff;
+        }
+        .absent-stu-container {
+            border-bottom: solid 1rpx @ccc;
+        }
+        .img-container {
+            height: 120rpx;
+            padding-top: 10rpx;
+            font-size: 28rpx;
+            color: @888;
+            .image-container-view {
+                width: 330rpx;
+                height: 100rpx;
+                white-space: nowrap;
+            }
+            image {
+                width: 100rpx;
+                height: 100rpx;
+                margin-left: 10rpx;
+            }
+        }
+    }
+</style>
+
+<template>
+    <view class="personal-detail-boss pb95">
+        <view class="mt20">
+            <ListItemContainer classes="small" class="pt20">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考试课程</view>
+                    <view>{{infos.kskc}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考试性质</view>
+                    <view>{{infos.ksxz}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <text space="nbsp">学      期</text>
+                    <view>{{infos.xq}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考试时间</view>
+                    <view>{{infos.kssj}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>所属校区</view>
+                    <view>{{infos.ssxq}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考场名称</view>
+                    <view>{{infos.kcmc}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考试时长</view>
+                    <view>{{infos.kssc || ''}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>授课教师</view>
+                    <view>{{infos.skjs}}</view>
+                </view>
+            </ListItemContainer>
+            <view class="exam-classes-container">
+                <view class="column-between ml30 mr10 personal-detail-exam-list-item">
+                    <view>考试人群</view>
+                    <view class="exam-classes">
+                        <view wx:for="{{ infos.ksrq}}" wx:key="index" wx:for-index="index" wx:for-item="item">
+                            <text>{{item.bjdm}}（{{item.bjksrs}}人）</text>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>监考教师</view>
+                    <view>{{infos.jkjs}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>巡考教师</view>
+                    <view>{{infos.xkjs || ''}}</view>
+                </view>
+            </ListItemContainer>
+        </view>
+        <view style="width:100%; height: 10rpx;"></view>
+        <button type="primary" class="fix-bottom" wx-if="{{isEntering === '0' && isMainInvigilator }}" @tap="tapToEnterList">录入监考登记表</button>
+        <button type="primary" class="fix-bottom" wx-if="{{isEntering === '1' }}" @tap="tapToCheckDetail">查看监考登记表</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import InvigilateDetail from 'api/invigilate';
+import ListItemContainer from 'components/listItemContainer';
+
+export default class Personal extends wepy.page {
+    config = {
+        navigationBarTitleText: '查看详情',
+    };
+    data = {
+        infos: {},
+        isEntering: false, // 是否录入过
+        stuNum: 0,
+        jkid: null,
+        isMainInvigilator: false,
+        canTap: '',
+    };
+    components = {
+        ListItemContainer: ListItemContainer,
+    };
+    methods = {
+        tapToEnterList() {
+            if (this.canTap === 'false') {
+                tips.error('考试还未开始');
+                return;
+            }
+            wepy.navigateTo({ url: `registerSurface?kcapid=${this.kcapid}&stuNum=${this.stuNum}&jkryId=${this.jkid}`, });
+        },
+        tapToCheckDetail() {
+            wepy.navigateTo({
+                url: `checkInvigilateForm?id=${this.infos.jkid}`,
+            });
+        },
+        async getPageInfo(query, that) {
+            tips.loading('加载中');
+            const rdata = await InvigilateDetail.getJkKsInfo({
+                sjId: query.sjId,
+                kcapId: query.kcapId,
+                jkId: query.jkId,
+            });
+            tips.loaded();
+            if (rdata.statusCode === 200) {
+                that.infos = rdata.data.data;
+                that.isEntering = that.infos.flag;
+                that.stuNum = that.infos.bjksrsSum;
+                that.jkid = that.infos.jkid;
+                that.isMainInvigilator = that.infos.isMainInvigilator === '0' ? false : true;
+                that.$apply();
+            } else {
+                tips.error(rdata.message);
+            }
+        },
+    };
+    async onLoad(query) {
+        this.kcapid = query.kcapId;
+        this.canTap = query.canTap;
+        await this.methods.getPageInfo(query, this);
+        this.$apply();
+    };
+};
+</script>

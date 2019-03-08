@@ -1,0 +1,136 @@
+<style lang='less'>
+    .invi-summrize-form {
+        padding: 42rpx 30rpx;        
+        .text-area {
+            border: 1px solid #ccc;
+            width: 100%;
+            height: 425rpx;
+            font-size: 28rpx;
+            padding: 12rpx 20rpx;
+            box-sizing: border-box;
+        }
+        .save {
+           position: fixed;
+           bottom: 0;
+           left: 0; 
+           border-radius: 0;
+           width: 100%;
+        }
+    }
+
+</style>
+<template> 
+    
+    <form bindsubmit="bindFormSubmit">
+        <view class='invi-summrize-form'>
+            <textarea
+                placeholder='请输入内容'
+                auto-focus='true'
+                class='text-area'
+                bindblur='bindblur'
+                value="{{textValue}}"
+            >
+            </textarea>        
+            <button class='save' type="primary" disabled="{{iSDisable}}" @tap='saveFrom'>
+                保存
+            </button>
+        </view>
+    </form>
+
+</template>
+<script>
+import wepy from 'wepy';
+import tourTest from '../api/tourTest';
+
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '巡考总结表',
+        navigationBarTextStyle: '#fff',
+    };
+    data = {
+        contentForm: '',
+        name: '',
+        textValue: '',
+        type: '',
+        typeV: '',
+        iSDisable: false,
+        id: '',
+        isS: '',
+        isSummrize: false,
+    };
+    methods = {
+        bindblur(e) {
+            this.textValue = e.detail.value;
+        },
+        saveFrom() {
+            // if (this.isSummrize) {
+            //     const obj = {
+            //         xkryId: '201512300076',
+            //         xkzj: this.textValue,
+            //     };
+            //     tourTest.SaveSummarize(obj).then(res => {
+            //     }).catch(res => {
+            //     });
+            //     return;
+            // };
+            this.iSDisable = true;
+            let obj = {
+                id: this.id,
+                xkryId: this.xkryId,
+            };
+            if (!this.type) {
+                if (this.isS) {
+                    obj = Object.assign(obj, {
+                        xszj: this.textValue,
+                    });
+                } else {
+                    obj = Object.assign(obj, {
+                        xsjl: this.textValue,
+                    });
+                };
+            } else {
+                const changeKey = this.type;
+                const changeKeyV = this.typeV;
+                obj[changeKey] = 0;
+                obj[changeKeyV] = this.textValue;
+            };
+            if (!this.textValue) {
+
+            };
+            tourTest.save(obj).then(res => {
+                if (res.data.statusCode === 200) {
+                    wepy.navigateBack({
+                        delta: 1,
+                    });
+                    // wepy.navigateBack({ delta: 1, });
+                };
+            }).catch(res => {
+            });
+        },
+    };
+    onLoad(op) {
+        this.iSDisable = false;
+        this.isS = '';
+        this.isS = op.isSu ? op.isSu : '';
+        this.textValue = wepy.$instance.globalData.tempData;
+        if (op.from) {
+            this.isSummrize = true;
+            this.$apply();
+            return;
+        };
+        this.id = op.id;
+        this.xkryId = op.xkryId;
+        if (op.name) {
+            wepy.setNavigationBarTitle({
+                title: op.name,
+            });
+        };
+        this.type = op.type;
+        this.typeV = op.typeV;
+        this.$apply();
+    }
+}
+
+</script>

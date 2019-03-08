@@ -1,0 +1,129 @@
+<style lang='less'>
+    @import '../styles/base.less';
+    .check-infor {
+        margin-top: 30rpx;
+        .view {
+            background: #fff;
+            padding-left: 30rpx; 
+        }       
+        .content {
+            position: relative;
+            padding: 21rpx 0rpx;
+            .inforCOntent {
+                font-size: 34rpx;
+                color: rgba(136,136,136,1);
+                float: right;
+                margin-right: 76rpx;
+            }
+        }
+        .dropOut {
+            margin-top: 228rpx;
+        }
+        .borderB {
+            border-bottom: 1rpx solid #E5E5E5;
+        }
+        .history {
+           margin-top: 30rpx;
+           background-color: #fff;
+           .content {
+               margin-left: 30rpx;
+           }
+        }
+        .check {
+            margin: 90rpx 20rpx 0;
+        }
+    }
+</style>
+<template>
+    <view class='check-infor'>
+        <view class='view'>
+            <picker  bindchange="bindPickerChange" value="{{index}}" range="{{range}}" bindchange='bindchange'>
+                <view class="content borderB">
+                    选择学期
+                        <text  class="inforCOntent">{{range[index]}}</text>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+                </view>
+            </picker>
+            <picker bindchange="bindPickerChange" value="{{index}}" range="{{rangeType}}" bindchange='bindchangeType'>
+                <view class="content borderB">
+                    选择考试类型
+                        <text class="inforCOntent">{{rangeType[indexType]}}</text>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+                </view>
+            </picker>
+            </view>
+            <button type="primary" @tap="checkGrade" class='check'>查询</button>
+            <!-- <button type="primary" @tap="addPic" class='check'>相机</button>
+            {{}}
+            <view  for="{{listImg}}" key="index" index="index" item="src">
+                {{src}}{{index}}
+             <image style="width: 200px; height: 200px; background-color: #eeeeee;" mode="scaleToFill" src="{{src}}"></image>
+            </view> -->
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import student from '../api/student';
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '查询历史',
+        navigationBarTextStyle: '#fff',
+        enablePullDownRefresh: true,
+    };
+    components = {
+    };
+    data = {
+        index: 0,
+        num: 0,
+        indexType: 0,
+        from: '',
+        range: [ '第一学期', '第二学期', '第三学期', ],
+        rangeType: [ '期中考试', '期末考试', '月考', ],
+        listImg: [],
+    };
+    methods = {
+        onPullDownRefresh() {
+            alert('刷新了');
+        },
+        checkGrade() {
+            wepy.reLaunch({
+                url: `examPlan?q=${this.range[this.index]}&nd=${this.rangeType[this.indexType]}&isQuery=true`,
+            });
+            this.$com.bottomTab.int = 1;
+        },
+        bindchange(op) {
+            this.index = op.detail.value;
+        },
+        bindchangeType(op) {
+            this.indexType = op.detail.value;
+        },
+        // addPic() {
+        //     const _that = this;
+        //     wepy.chooseImage({
+        //         count: 9, // 默认9
+        //         sizeType: [ 'original', 'compressed', ],
+        //         sourceType: [ 'album', 'camera', ],
+        //     }).then(res => {
+        //         _that.listImg = res.tempFilePaths;
+        //         console.log(res.tempFilePaths);
+        //         _that.$apply();
+        //     });
+        // },
+    };
+    onLoad(op) {
+        student.getStudentYGrade().then(res => {
+            this.range = res.data.data.map(item => {
+                return item.nd;
+            });
+            this.rangeType = res.data.data.map(item => {
+                return item.xq;
+            });
+            this.$apply();
+        }).catch(res => {
+        });
+    }
+}
+
+</script>

@@ -1,0 +1,264 @@
+<style lang="less">
+    .add-fraud-student {
+        width: 100%;
+        // padding-top: 70rpx;
+        overflow: hidden;
+        position: relative;
+        box-sizing: border-box;
+        .package {
+            position: relative;
+            padding-left: 15rpx;
+            background-color: #fff;
+            height: 90rpx;
+            line-height: 90rpx;
+            .inforCOntent, .inforCOntentS {
+                position: relative;
+                font-size: 32rpx;
+                color: rgba(136,136,136,1);
+                float: right;
+                margin-right: 56rpx;
+            }
+            .inforCOntentS {
+                color: #000;
+            }
+        }
+        .borderS {
+            border-bottom: 1px solid #E5E5E5;                
+        }
+        >view{
+            line-height: 90rpx;
+            input {
+                width: 450rpx;
+                display: inline-block;
+                background: #fff;
+                vertical-align: middle;
+                height: 90rpx;
+            }
+            text {
+                margin-right: 10rpx;
+            }
+            .image-container-view {
+                margin-top: 15rpx;
+                width: 330rpx;
+                height: 90rpx;
+                white-space: nowrap;
+            }
+            image {
+                width: 90rpx;
+                height: 90rpx;
+                margin-left: 10rpx;
+            }
+        }
+        .add-student-input-name {
+            text-align: right;
+            float: right;
+            margin-right: 30rpx;
+        }
+        .uploadFile {
+            width: 90rpx;
+            display: inline;
+            height: 30rpx;
+            font-size: 28rpx;
+        }
+    }
+</style>
+
+<template>
+    <view class="add-fraud-student">
+        <!-- <view 
+            class="package borderS"
+            @tap="tapCont(0)"
+        > -->
+            　　
+            <!-- <input
+                type='text'
+                maxlength="25"
+                focus="{{autoFocus[0]}}"
+                confirm-type='search'
+                class="add-student-input-name"
+                placeholder="请输入学生姓名"
+                bindinput="onclickToSearch"
+                value="{{stuObj.xsxm}}"
+                disabled="{{inpDisable}}"
+                placeholder-style="font-size: 32rpx;text-align:right"/> -->
+        <!-- </view> -->
+        <picker  bindchange="bindPickerChangeRecycle" value="{{stuIndex}}" range="{{recycleList}}">
+            <view class="package borderS">
+                <text class="contentT">　　姓名：</text>
+                    <text class="inforCOntent">请选择</text>
+                    <text class="inforCOntentS">{{recycleList[stuIndex]}}</text>
+                <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </view>
+        </picker>
+        <view 
+            class="package borderS"
+            @tap="tapCont(1)"
+        >
+            　　学号：
+            <input
+                type='text'
+                maxlength="25"
+                focus="{{autoFocus[1]}}"
+                confirm-type='search'
+                class="add-student-input-name"
+                placeholder="请输入学生学号"
+                bindinput="onclickToSearch1"
+                value="{{stuObj.xsxh}}"
+                disabled="{{inpDisable}}"
+                placeholder-style="font-size: 32rpx;text-align:right"/>
+        </view>
+        <view 
+            class="package borderS"
+            @tap="tapCont(2)"
+        >
+            违规行为：
+            <input
+                type='text'
+                maxlength="25"
+                focus="{{autoFocus[2]}}"
+                confirm-type='search'
+                class="add-student-input-name"
+                placeholder="请输入行为"
+                value="{{stuObj.wgxw}}"                
+                bindinput="onclickToSearch2"
+                disabled="{{inpDisable}}"
+                placeholder-style="font-size: 32rpx;text-align:right"/>
+        </view>
+        <view style="width:100%; height: 10rpx;"></view>
+        <button wx:if="{{!inpDisable}}" type="primary" class="fix-bottom" @tap="tapToAddStu" disabled="{{iSDisable}}">确定</button>
+    </view>    
+</template>
+
+<script>
+import wepy from 'wepy';
+import tourTest from '../api/tourTest';
+import tips from 'utils/tips';
+export default class AddFraudStudent extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '违规学生',
+        navigationBarTextStyle: '#fff',
+    }
+    data = {
+        stuIndex: 0,
+        stuObj: {
+            wgxw: '',
+            xsxh: '',
+            xsxm: '',
+        },
+        inpDisable: false,
+        iSDisable: false,
+        recycleList: [],
+        xkryId: '',
+        itemId: '',
+        id: '',
+        autoFocus: {
+            0: false,
+            1: false,
+            2: false,
+        },
+    };
+    components = {
+    };
+
+    computed = {
+    };
+
+    methods = {
+        uploadFile() {},
+        bindPickerChangeRecycle(e) {
+            // this.stuObj.xsxm = e.detail.value;
+        },
+        onclickToSearch1(e) {
+            this.stuObj.xsxh = e.detail.value;
+        },
+        onclickToSearch2(e) {
+            this.stuObj.wgxw = e.detail.value;
+        },
+        tapToAddStu() {
+            const obj = {
+                id: this.id,
+                xkryId: this.xkryId,
+                kwWgjlList: [ {
+                    id: this.itemId,
+                    // jkdjId: 登记编号 ,
+                    // remarks: 备注 ,
+                    // updateDate: 更新日期 ,
+                    // wglx: 违规类型 : 0：缺考；1：作弊 ,
+                    wgxw: this.stuObj.wgxw,
+                    xsxh: this.stuObj.xsxh,
+                    xsxm: this.stuObj.xsxm,
+                }, ],
+            };
+            if (!this.stuObj.xsxh) {
+                tips.modal('请填写学号');
+                return;
+            } else if (!this.stuObj.xsxm) {
+                tips.modal('请填写姓名');
+                return;
+            } else if (!this.stuObj.wgxw) {
+                tips.modal('请填写违规行为');
+                return;
+            }
+            this.iSDisable = true;
+            tourTest.save(obj).then(res => {
+                this.iSDisable = false;
+                if (res.data.statusCode === 200) {
+                    // wepy.navigateTo({
+                    //     url: 'invigilateForm',
+                    // });
+                    tips.success('添加成功', 300).then(res => {
+                        wepy.navigateBack({ delta: 1, });
+                    });
+                } else {
+                    tips.modal(res.data.message);
+                };
+            }).catch(res => {
+            });
+        },
+        tapCont(val) {
+            this.autoFocus = {
+                0: false,
+                1: false,
+                2: false,
+            };
+            Object.keys(this.autoFocus).forEach((item, key) => {
+                if (key / 1 === val / 1) {
+                    this.autoFocus[key] = true;
+                } else {
+                    this.autoFocus[key] = false;
+                };
+            });
+        },
+        tapToPreviewImage() {
+            wepy.previewImage({
+                current: 'http://ww1.sinaimg.cn/large/0061lnyyly1fn2laq5eqvj30m80hs75d.jpg', // 当前显示图片的http链接
+                urls: [ 'http://ww1.sinaimg.cn/large/0061lnyyly1fn2laq5eqvj30m80hs75d.jpg', 'http://ww1.sinaimg.cn/large/0061lnyyly1fn2laq5eqvj30m80hs75d.jpg', ], // 需要预览的图片http链接列表
+            });
+        },
+    };
+    onLoad(op) {
+        this.iSDisable = false;
+        this.stuObj = wepy.$instance.globalData.fraudInfo;
+        if (this.stuObj.xsxm || this.stuObj.xsxh) {
+            this.inpDisable = true;
+        } else {
+            this.inpDisable = false;
+        };
+        this.itemId = op.itemId;
+        this.id = op.id;
+        this.xkryId = op.xkryId;
+        const obj = {
+            xkryId: op.xkryId,
+        };
+        tourTest.searchStudent(obj).then(res => {
+            this.recycleList = res.data.data.map(item => {
+                return item.xm;
+            });
+            this.$apply();
+        });
+    };
+};
+</script>
+

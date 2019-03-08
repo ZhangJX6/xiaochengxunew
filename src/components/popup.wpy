@@ -1,0 +1,87 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .popup-boss {
+        position: fixed;
+        left: 0;
+        top:0;
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+        background-color: rgba(0,0,0,.7);
+        z-index: 20;
+        transition: left .3s ease;
+        -webkit-transition: left .3s ease;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        .popup-content {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: @bgColor;
+            box-sizing: border-box;
+            // 居上
+            &.top {
+                top: 0;
+            }
+            // 居下
+            &.bottom {
+                bottom: 0;
+                height: 100rpx;
+            }
+            // 居中
+            &.center {
+                top: 50%;
+                height: 50%;
+            }
+        }
+        &.isLeft {
+            left: 100%;
+        }
+    }
+</style>
+
+<template>
+    <view
+        class="popup-boss {{value ? '' : 'isLeft'}}"
+        style="fixed: {{mode}}; visibility: {{value ? 'normal' : 'hidden'}}">
+        <view id="popup-content" class="popup-content {{position}} {{contentClass}}" @tap="tapToCloseModal">
+            <slot></slot>
+        </view>
+    </view>    
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class Popup extends wepy.component {
+    props = {
+        mode: { // 固定模式 fixed or absolute
+            type: String,
+            default: 'fixed',
+        },
+        value: {
+            type: Boolean,
+            default: false,
+            twoWay: true,
+        },
+        modal: { // 点击mask关闭 popup
+            type: Boolean,
+            default: true,
+        },
+        position: { // content 位置
+            type: String,
+            default: 'top',
+        },
+        contentClass: { // 样式类
+            type: [ Object, Array, ],
+        },
+    };
+    methods = {
+        tapToCloseModal(e) {
+            if (this.value && e.target.id === 'popup-content') {
+                this.value = false;
+            }
+        },
+    };
+};
+</script>

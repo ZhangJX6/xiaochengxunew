@@ -1,0 +1,232 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .input-info-boss {
+        padding-bottom: 20rpx;
+        .input-info-text-area-container {
+            padding: 20rpx 30rpx 20rpx 20rpx;
+            box-sizing: border-box;
+        }
+        .input-info-text-area {
+            width: 100%;
+            padding: 10rpx;
+            font-size: 32rpx;
+            border-radius: 10rpx;
+            box-sizing: border-box;
+            border: solid 2rpx @e5;
+        }
+        .get-image-container {
+            > view {
+                float: left;
+                margin-right: 18rpx;
+            }
+            padding: 30rpx 20rpx 20rpx 20rpx;
+            background-color: @fff;
+            min-height: 200rpx;
+            margin-bottom: 105rpx;
+            box-sizing: border-box;
+        }
+        
+        .get-image-container:after{
+            display: block;
+            content:'';
+            clear: both;
+            height:0;
+        }
+
+        .input-info-add-image {
+            border: solid 2rpx @666;
+            position: relative;
+            &::before {
+                content: '';
+                display: inline-block;
+                width: 4rpx;
+                height: 100rpx;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background-color: @666;
+            }
+            &::after {
+                content: '';
+                display: inline-block;
+                width: 100rpx;
+                height: 4rpx;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background-color: @666;
+            }
+        }
+        .image-common {
+            width: 158rpx;
+            height: 158rpx;
+        }
+        .chosed-image {
+            position: relative;
+            margin-bottom: 20rpx;
+            image:nth-of-type(1) {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 32rpx;
+                height: 32rpx;
+                z-index: 19;
+            }
+            image:nth-of-type(2) {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+        .if-kcjs {
+            padding-left: 30rpx;
+            box-sizing: border-box;
+            background-color: @fff;
+            > view {
+                color: @333;
+                height: 80rpx;
+                font-size: 36rpx;
+                line-height: 80rpx;
+                // border-bottom: solid 2rpx #D3D3D3;
+            }
+        }
+    }
+</style>
+
+<template>
+    <view class="input-info-boss">
+        <view class="input-info-view">
+            <view class="if-kcjs" wx:if="{{queryName === '考场纪事' }}">
+                <view>考场纪事</view>
+            </view>
+            <view class="input-info-text-area-container white">
+                <textarea 
+                value='{{infos}}'
+                maxlength='-1'
+                class="white input-info-text-area"
+                bindinput="getInputInfos"
+                placeholder-style="color:#888"
+                placeholder="请输入内容" />
+            </view>
+        </view>
+        <view class="if-kcjs"  wx:if="{{queryName === '考场纪事' }}" style="margin-top: 30rpx;">
+            <view>上传图片</view>
+        </view>
+        <view class="get-image-container" wx:if="{{queryName === '考场纪事' }}">
+            <view class="image-common chosed-image" wx:for="{{chosedImgs}}" wx:for-item="item" wx:for-index="index" wx:key="item" >
+                <image src="../images/close.png" @tap="tapToDeleteIMG({{index}})"></image>
+                <image src="{{item}}"></image>
+            </view>
+            <view class="input-info-add-image image-common" @tap="tapToAddImage"></view>
+        </view>
+        <view style="width:100%; height: 10rpx;"></view>
+        <button type="primary" class="fix-bottom" @tap="tapToSubmit">确认</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+export default class InputInfo extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '考场纪事',
+        navigationBarTextStyle: '#fff',
+    };
+    data = {
+        queryName: null,
+        infos: '',
+        chosedImgs: [],
+        kcapid: null,
+        attList: '',
+    };
+
+    onLoad(query) {
+        console.log('wepy.$instance.globalData.gData.kcjs', wepy.$instance.globalData.gData.kcjs);
+        /*
+        * 设置标题
+        */
+        wepy.setNavigationBarTitle({
+            title: query.names,
+        });
+        /*
+        * 判断是否是来进行更改考场纪事内容
+        */
+        this.infos = wepy.$instance.globalData.gData.kcjs ? wepy.$instance.globalData.gData.kcjs : '';
+
+        this.kcapid = query.kcapid;
+
+        this.queryName = query.names;
+
+        this.chosedImgs = wepy.$instance.globalData.gData.kcImgList || [];
+    };
+
+    onUnload() {
+        this.chosedImgs = [];
+    };
+
+    methods = {
+        getInputInfos(val) {
+            this.infos = val.detail.value;
+        },
+        async tapToSubmit() {
+            if (this.config.navigationBarTitleText === '考场纪事') {
+                if (!this.infos) {
+                    tips.error('请输入考场纪事');
+                    return;
+                }
+                wepy.$instance.globalData.gData.kcjs = this.infos;
+            }
+            if (this.chosedImgs.length && this.queryName === '考场纪事') { // 存在选中的图片
+                tips.loading('上传中');
+                const totalCount = this.chosedImgs.length;
+                let count = 0;
+                this.chosedImgs.forEach(async item => {
+                    const rupload = await wepy.uploadFile({
+                        url: 'https://kwgl.newaigo.com/a/ws/sys/attachment/uploadFile',
+                        // url: 'http://47.93.31.175:8191/spoc-kwgl/a/ws/sys/attachment/uploadFile',
+                        filePath: item,
+                        header: wepy.$instance.globalData.header,
+                        name: 'files',
+                        formData: {
+                            objectId: this.kcapid,
+                            type: 'jk_img',
+                            fileType: 'all',
+                            dirName: 'images',
+                        },
+                    });
+                    count++;
+                    this.attList += JSON.parse(rupload.data).data.id + ',';
+                    console.log(this.attList, JSON.parse(rupload.data));
+                    if (count === totalCount) {
+                        tips.loaded();
+                        wepy.$instance.globalData.gData.attListkc = this.attList;
+                        wepy.$instance.globalData.gData.kcImgList = this.chosedImgs;
+                        wepy.navigateBack({
+                            delta: 1,
+                        });
+                    };
+                });
+            }
+        },
+        async tapToAddImage() {
+            const rdata = await wepy.chooseImage({
+                count: 9,
+                sizeType: [ 'original', 'compressed', ],
+                sourceType: [ 'album', 'camera', ],
+            });
+            this.chosedImgs = [ ...rdata.tempFilePaths, ...this.chosedImgs, ];
+            this.$apply();
+        },
+        tapToDeleteIMG(index) {
+            this.chosedImgs.splice(index, 1);
+            this.$apply();
+        },
+    };
+};
+</script>

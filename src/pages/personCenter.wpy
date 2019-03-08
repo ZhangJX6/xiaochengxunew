@@ -1,0 +1,182 @@
+<style lang='less'>
+    @import '../styles/base.less';
+    .person-center {
+        margin-top: 30rpx;  
+        .content {
+            color: @000;
+            height: 87rpx;
+            font-size: 34rpx;
+            line-height: 87rpx;
+            position: relative;
+            .inforCOntent, .inforCOntent1 {
+                color: @888;
+                float: right;
+                margin-right: 60rpx;
+            }
+            .inforCOntent1 {
+                width: 400rpx;
+                text-align: right;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                white-space: nowrap;
+                margin-right: 30rpx;
+            }
+            .inforCOntent1new {
+                width: 600rpx;
+            }
+        }
+        .dropOut {
+            margin-top: 228rpx;
+            border-radius: 0;
+        }
+        .borderB {
+            border-bottom: 1rpx solid #E5E5E5;
+        }
+        .history {
+           margin-top: 30rpx;
+           background-color: #fff;
+           .content {
+               margin-left: 30rpx;
+           }
+        }
+    }
+</style>
+<template>
+    <view class='person-center'>
+        <view class='view white pl30'>
+            <view class="content borderB">
+                用户名
+                <text class="inforCOntent1">{{userInfor.xm}}</text>
+            </view>
+            <view class="content borderB">
+                性别
+                <text wx:if="{{from==1}}" class="inforCOntent1">{{userInfor.xbdm=='1'?'男':'女'}}</text>
+                <text wx:else class="inforCOntent1">{{userInfor.xb=='1'?'男':'女'}}</text>
+            </view>
+            <view wx:if="{{from==1}}">
+                <view class="content borderB">
+                    专业
+                    <text class="inforCOntent1 inforCOntent1new">{{userInfor.zy}}</text>
+                </view>
+                <view class="content borderB">
+                    学号
+                    <text class="inforCOntent1">{{userInfor.xh}}</text>
+                </view>
+                <view class="content borderB">
+                    年级
+                    <text class="inforCOntent1">{{userInfor.nj}}</text>
+                </view>
+                <view class="content borderB">
+                    班级
+                    <text class="inforCOntent1">{{userInfor.bj}}</text>
+                </view>
+            </view>
+            <view class="content" @tap="editPassWorld">
+                密码
+                <text class="inforCOntent">*****</text>
+                 <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </view>
+        </view>
+        <!-- <view class='history' wx:if="{{from==1}}" >
+            <view class="content borderB" @tap="checkHistory">
+                查看历史记录 -->
+                <!-- <text class="inforCOntent"></text> -->
+                 <!-- <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </view>
+            <view class="content borderB"  @tap="checkTextParper">
+                申请查看试卷
+                 <image src="../images/arrow.png" class="icon-arrow-right middle" /> -->
+                <!-- <text class="inforCOntent"></text> -->
+            <!-- </view>
+        </view> -->
+        <button class="dropOut" @tap="tapToLogout">退出登录</button>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import login from 'api/login';
+import student from '../api/student';
+
+// import personInfoC from 'components/personInfoC';
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '个人中心',
+        navigationBarTextStyle: '#fff',
+    };
+    components = {
+        // personInfoC: personInfoC,
+    };
+    data = {
+        num: 0,
+        from: '',
+        userInfor: {
+            // name: '张小花',
+            // sex: '女',
+            // major: '计算机科学',
+            // stuNum: '241516',
+            // grade: '2017级',
+            // class: '1计算机',
+        },
+    };
+    methods = {
+        editPassWorld() {
+            wepy.navigateTo({
+                url: 'findPwd',
+            });
+        },
+        checkHistory() {
+            wepy.navigateTo({
+                url: 'checkInfor',
+            });
+        },
+        checkTextParper() {
+            tips.modal('请联系老师');
+        },
+        /*
+        * 退出登录
+        */
+        async tapToLogout() {
+            tips.loading('退出登录中');
+            const rdata = await login.logout();
+            tips.loaded();
+            if (rdata.statusCode === 200) {
+                wepy.$instance.globalData.header = {};
+                wepy.reLaunch({
+                    url: 'login',
+                });
+            } else {
+                tips.error(rdata.message);
+            }
+        },
+    };
+
+    onLoad(op) {
+        this.from = op.from;
+        console.log('op.from ==> ', op.from);
+        if (op.from) {
+            const obj = {
+                xh: wepy.$instance.globalData.uesrNum,
+            };
+            student.getStudentIntroduce(obj).then(res => {
+                this.userInfor = res.data.data;
+                this.$apply();
+            }).catch(res => {
+                console.log(res);
+            });
+            return;
+        }
+        const obj = {
+            jsgh: wepy.$instance.globalData.uesrNum,
+        };
+        student.getTeacherInfo(obj).then(res => {
+            this.userInfor = res.data.data;
+            this.$apply();
+        }).catch(res => {
+            console.log(res);
+        });
+    };
+};
+</script>

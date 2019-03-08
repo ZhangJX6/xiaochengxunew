@@ -1,0 +1,54 @@
+<style lang='less'>
+    .summrizeGSX {
+        text-indent: 2em;
+        padding: 42rpx 30rpx;
+        font-size: 34rpx;
+        line-height: 50rpx;
+    }
+
+</style>
+<template>
+    <view class='summrizeGSX'>
+        {{content}}
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+import tourTest from '../api/tourTest';
+
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '总结1',
+        navigationBarTextStyle: '#fff',
+    };
+    data = {
+        content: '',
+    };
+    methods = {
+        getContentDate() {
+            this.content = '我是总结';
+        },
+    };
+    onLoad(op) {
+        this.content = '';
+        if (op.id) {
+            const obj = {
+
+            };
+            tourTest.getSummarize(obj).then(res => {
+
+            }).catch(res => {
+
+            });
+        }
+        this.$apply();
+        // this.getContentDate();
+    };
+}
+
+</script>
+
+
+

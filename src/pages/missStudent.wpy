@@ -1,0 +1,35 @@
+<style lang='less'>
+    .miss-student {
+        .student-name {
+            width: 100%;
+            font-size: 28rpx;
+            background-color: #fff;
+            margin-top: 30rpx;
+            box-shadow:0px -1px 0px 0px rgba(229,229,229,1),0px 1px 0px 0px rgba(229,229,229,1); 
+            height: 90rpx;
+            line-height: 90rpx;
+        }
+    }
+
+</style>
+<template>
+    <view class='miss-student'>
+       <input class='student-name' placeholder="这是一个可以自动聚焦的input" auto-focus/>
+    </view>
+</template>
+<script>
+import wepy from 'wepy';
+export default class textRecord extends wepy.page {
+    config = {
+        navigationBarTitleText: '缺考考生',
+    };
+    components = {
+    };
+    data = {
+        num: 0,
+    };
+    methods = {
+    };
+}
+
+</script>

@@ -1,0 +1,379 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .invigilate-form {
+        padding-bottom: 30rpx; 
+        position: relative;
+        font-size: 32rpx;
+        color: rgba(0,0,0,1);
+        line-height: 48rpx;
+        .titleInfor, .recordInfor, .statusInfor {
+            margin-top: 30rpx;
+            background-color: #fff;
+            padding-left: 29rpx;
+            .content {
+                position: relative;
+                padding: 21rpx 0rpx;
+                .inforCOntent {
+                     font-size: 32rpx;
+                    color: rgba(136,136,136,1);
+                    float: right;
+                    margin-right: 76rpx;
+                }
+            }
+        }
+        .statusInfor {
+            .content {
+                .contentT {
+                position: relative;
+                width: 469rpx;
+                display: inline-block;
+                overflow: hidden;
+                 font-size: 32rpx;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            }
+        }
+        .contentInfor, .studentInfor{
+            position: relative;
+            margin-top: 30rpx;
+            background-color: #fff;
+            padding-left: 29rpx;
+            .contentT {
+                position: relative;
+                padding: 21rpx 0rpx;
+                width: 469rpx;
+                display: inline-block;
+                font-size: 32rpx;
+                // overflow: hidden;
+                // white-space: nowrap;
+                // text-overflow: ellipsis;
+            }
+            .contentT1 {
+                width: 300rpx;
+            }
+            .inforCOntent {
+                position: relative;
+                font-size: 32rpx;
+                color: rgba(136,136,136,1);
+                float: right;
+                margin-right: 76rpx;
+                padding: 21rpx 0rpx;
+            }
+        }
+        .studentInfor, .contentInfor {
+            .content {
+                position: relative; 
+            }
+        }
+        .borderB {
+            border-bottom: 1rpx solid #E5E5E5;
+        }
+        .addStudent {
+            color:#586C94;
+            padding: 21rpx 0rpx;
+            text-align: center;
+            cursor: pointer;
+        }
+        // .text-area {
+        //     border: 1px solid #ccc;
+        //     width: 100%;
+        //     height: 425rpx;
+        //     font-size: 28rpx;
+        //     background: #fff;
+        //     padding: 20rpx;
+        //      font-size: 32rpx;
+        //     box-sizing: border-box;
+        // }
+        .titleInfor {
+            .content {
+                input {
+                    width: 450rpx;
+                    display: inline-block;
+                    background: #fff;
+                    vertical-align: middle;
+                }
+            }
+        }
+    }
+</style>
+<template>
+    <view class="invigilate-form">
+        <view class="titleInfor">
+            <view class="content borderB">
+                巡视时间:
+                <text style="float:right;margin-right:20px;color: rgba(136,136,136,1);">{{year}}</text>
+            </view>
+            <view class="content">
+                巡视地点:
+                <text style="float:right;margin-right:20px;color: rgba(136,136,136,1);">{{site}}</text>
+            </view>
+        </view>
+        <view class="contentInfor">
+            <view class="content {{index != contentInforList-1 ? 'borderB' : ''}}"
+                wx:for="{{contentInforList}}"
+                wx:key="index2"
+            >   
+                <picker  bindchange="bindPickerChange1"  value="{{item.index}}" range="{{range}}" id="{{index}}">
+                    <text class="contentT">{{index+1}}.{{item.title}}</text>
+                    <text class="inforCOntent" wx:if="{{!item.index}}">请选择</text>
+                    <text class="inforCOntent" wx:else >{{range[item.index]}}</text>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+                </picker>
+            </view>
+        </view>
+        <view class="studentInfor">
+            <view style="color:rgba(136,136,136,1);padding: 21rpx 0rpx;" class="borderB">违规考生</view>
+             <view class="content borderB"
+                wx:for="{{obj.kwWgjlList}}"
+                index='index'
+                wx:key='index3'
+                @tap="addStudent('true', {{item}})"
+             > 
+                <text class="contentT1 contentT">{{item.xsxm}}</text>
+                <text class="inforCOntent">{{item.xsxh}}</text>
+                <image src="../images/arrow.png" class="icon-arrow-right middle" />                
+            </view>
+            <view class="addStudent" wx:if="{{isShowAdd}}" @tap="addStudent('', {})">添加</view>            
+        </view>
+         <view class="statusInfor">
+            <picker  bindchange="bindPickerChangeRecycle" value="{{recycleIndex}}" range="{{recycleList}}">
+                <view class="content">
+                    <text class="contentT">回收所巡视考场的课程考核情况</text> 
+                        <text class="inforCOntent" wx:if="{{!recycleIndex}}">请选择</text>
+                        <text class="inforCOntent" wx:else >{{recycleList[recycleIndex]}}</text>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+                </view>
+            </picker>
+        </view>
+        <view class="recordInfor">
+           <view class="content" @tap="inviText">
+                巡视记录
+                <text class="inforCOntent">内容</text>
+                <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </view>
+        </view>
+        <!-- <view class="recordInfor">
+           <view class="content" @tap="inviSummary">
+                巡考总结
+                <text class="inforCOntent">内容</text>
+                <image src="../images/arrow.png" class="icon-arrow-right middle" />
+            </view>
+        </view> -->
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import popup from '../components/popup';
+import tourTest from '../api/tourTest';
+import tips from 'utils/tips';
+export default class textRecord extends wepy.page {
+    config = {
+        backgroundTextStyle: 'light',
+        navigationBarBackgroundColor: '#0290FF',
+        navigationBarTitleText: '巡考登记表',
+        navigationBarTextStyle: '#fff',
+    }
+    components = {
+        popup,
+        popup1: popup,
+    };
+
+    data = {
+        isShowAdd: false,
+        isShow: false,
+        isShowTextA: false,
+        recycleList: [ '未回收', '回收', ],
+        recycleIndex: null,
+        date: '',
+        site: '',
+        year: '',
+        id: '',
+        xkryId: '',
+        formId: '',
+        obj: {
+        },
+        range: [ '异常', '正常', ],
+        contentInforList: [
+            { title: '检查监考员是否按时到位并监督其履行职责情况', index: '', },
+            { title: '检查学生是否按规定带学生证和身份证参加考试', index: '', },
+            { title: '检查考场清场情况及作为安排是否符合要求', index: '', },
+            { title: '检查监考员在考前是否给学生宣读《广西师范大学普通全日制本科考试规则》', index: '', },
+            { title: '考试是否按时开始和结束', index: '', },
+            { title: '是否发现考生有违纪行', index: '', },
+        ],
+        studentList: [],
+    };
+
+    computed = {};
+    methods = {
+        bindDateChange(op) {
+            this.date = op.detail.value;
+        },
+        bindPickerChange(op) {
+            this.index = op.detail.value;
+            if (op.detail.value === '1') {
+                wepy.navigateTo({
+                    url: 'inviSummrizeForm?name=异常情况',
+                });
+            };
+        },
+
+        bindPickerChangeRecycle(op) {
+            this.recycleIndex = op.detail.value;
+            // this.obj.isJchs = op.detail.value;
+            const obj = {
+                isJchs: op.detail.value,
+                id: this.id,
+                xkryId: this.xkryId,
+            };
+            const _this = this;
+            this.methods.saveInfo(obj, _this);
+        },
+
+        bindPickerChange1(op) {
+            const curr = op.currentTarget.id;
+            this.contentInforList[curr].index = op.detail.value;
+            this.$apply();
+            let type = '';
+            let typeV = '';
+            switch (curr) {
+            case '0': type = 'isJcjk'; typeV = 'jcjkXq'; break;
+            case '1': type = 'isJcxs'; typeV = 'jcxsXq'; break;
+            case '2': type = 'isJckc'; typeV = 'jckcXq'; break;
+            case '3': type = 'isJcxd'; typeV = 'jcxdXq'; break;
+            case '4': type = 'isJcsj'; typeV = 'jcsjXq'; break;
+            case '5': type = 'isJcwj'; typeV = 'jcwjXq'; break;
+            };
+            if (op.detail.value === '0') {
+                wepy.$instance.globalData.tempData = this.obj[typeV];
+                wepy.navigateTo({
+                    url: `inviSummrizeForm?name=异常情况&type=${type}&id=${this.id}&typeV=${typeV}&xkryId=${this.xkryId}`,
+                });
+                return;
+            };
+            const obj = {
+                id: this.id,
+                xkryId: this.xkryId,
+            };
+            obj[type] = 1;
+            obj[typeV] = '';
+            const _this = this;
+            this.methods.saveInfo(obj, _this);
+        },
+        addStudent(isAdd, item) {
+            if (item !== '{}') {
+                let src = [];
+                src = item.attachmentList.map(itemC => {
+                    const obj = {};
+                    obj.path = itemC.filePath;
+                    obj.id = itemC.id;
+                    return obj;
+                });
+                wepy.setStorage({
+                    key: 'src',
+                    data: src,
+                });
+                wepy.navigateTo({ url: `violationStudentXk?types=add&xm=${item.xsxm}&xh=${item.xsxh}&id=${this.id}&xkryId=${this.obj.id}&studId=${item.id}&wgxw=${item.wgxw}`, });
+                return;
+            };
+            wepy.setStorage({
+                key: 'src',
+                data: [],
+            });
+            wepy.navigateTo({
+                url: `addStudent?id=${this.id}&xkry=${this.xkryId}&xkryId=${this.obj.id}&from=xk`,
+            });
+        },
+        // personInfo(op) {
+        //     wepy.navigateTo({
+        //         url: `addFraudStudent?id=${this.id}&xkryId=${this.xkryId}&itemId=`,
+        //     });
+        // },
+        checkProsition() {
+            wepy.navigateTo({
+                url: 'examPlan',
+            });
+        },
+        // checkTime() {
+        //     wepy.navigateTo({
+        //         url: 'examPlan',
+        //     });
+        // },
+        inviText() {
+            wepy.$instance.globalData.tempData = this.obj.xsjl;
+            wepy.navigateTo({
+                url: `inviSummrizeForm?typeV=&id=${this.id}&type=&xkryId=${this.xkryId}&isSu=`,
+            });
+        },
+
+        // inviSummary() {
+        //     wepy.$instance.globalData.tempData = this.obj.xsjl;
+        //     wepy.navigateTo({
+        //         url: `inviSummrizeForm?typeV=&id=${this.id}&type=&xkryId=${this.xkryId}&isSu=true`,
+        //     });
+        // },
+
+        saveInfo(obj, _this) {
+            tourTest.save(obj).then(res => {
+                tips.success('修改成功');
+                if (!_this.isShowAdd) {
+                    const obj1 = {
+                        xkryId: _this.formId,
+                    };
+                    tourTest.form(obj1).then(res => {
+                        _this.xkryId = res.data.data.xkryId;
+                        _this.id = res.data.data.id;
+                    });
+                };
+                _this.isShowAdd = true;
+                this.$apply();
+            }).catch(res => {
+            });
+        },
+    };
+    onShow(op) {
+        wepy.getStorage({
+            key: 'year',
+        }).then(res => {
+            this.year = res.data;
+            this.$apply();
+        });
+        wepy.getStorage({
+            key: 'site',
+        }).then(res => {
+            this.site = res.data;
+            this.$apply();
+        });
+        try {
+            const value = wepy.getStorageSync('formId');
+            if (value) {
+                this.formId = value;
+                const obj = {
+                    xkryId: value,
+                };
+                tourTest.form(obj).then(res => {
+                    const data = res.data.data;
+                    this.isShowAdd = false;
+                    if (data.id) {
+                        this.isShowAdd = true;
+                    };
+                    data.isJchs = data.isJchs === null ? 0 : data.isJchs;
+                    this.obj = data;
+                    this.id = data.id;
+                    this.xkryId = data.xkryId ? data.xkryId : op.firstId;
+                    this.recycleIndex = data.isJchs;
+                    this.contentInforList[0].index = data.isJcjk;
+                    this.contentInforList[1].index = data.isJcxs;
+                    this.contentInforList[2].index = data.isJckc;
+                    this.contentInforList[3].index = data.isJcxd;
+                    this.contentInforList[4].index = data.isJcsj;
+                    this.contentInforList[5].index = data.isJcwj;
+                    this.$apply();
+                });
+            };
+        } catch (e) {};
+    }
+};
+</script>

@@ -1,0 +1,140 @@
+<style lang="less">
+    .text-recordCGSX {
+        @import '../styles/base.less';
+        
+        .package {
+            position: relative;
+            padding-left: 15rpx;
+            background-color: #fff;
+            height: 120rpx;
+            .textInfo {
+                background-color: #fff;
+                padding: 15rpx; 
+                font-size: 34rpx;
+                color: rgba(0,0,0,1);
+                box-sizing: border-box;
+                line-height: 48rpx;
+            }
+            .borderS {
+                border-bottom: 1px solid #E5E5E5;                
+            }
+            .textTime {
+                font-size: 26rpx;
+                color: rgba(136,136,136,1);
+                line-height: 37rpx;
+            }
+            .right {
+                float: right;
+            }
+        }
+    }
+</style>
+<template>
+    <view class="text-recordCGSX">
+        <view 
+            wx:if='{{!isSc}}'
+            class="package"
+        >
+            <view  class="textInfo {{index==dataLength-1?'':'borderS'}}"
+                @tap="clickCurr"
+            >
+                {{recordDate.kcmc}}
+                <!-- <image src="../images/arrow.png" class="icon-arrow-right middle" /> -->
+                <slot name="status2"></slot>
+                <view class="textTime">
+                    {{recordDate.cj}}分
+                    <!-- <text class="right">{{recordDate.right}}</text> -->
+                </view>
+            </view>
+        </view>
+        <view wx:elif="{{isShowTitle}}">
+            <!-- <view class="yearLong">
+                {{recordDate.title}}
+            </view> -->   
+            <!-- wx:for="{{recordDate.list}}"
+                wx:key="index"
+                wx:for-item="items" {{index != recordDate.list.length-1?'borderS':''}-->
+            <view 
+                class="package"
+            >
+                <view  
+                    class="textInfo borderS"
+                    @tap="clickItem({{recordDate}}, {{index}})"
+                >
+                    {{recordDate.xkdd}} <text style="font-size:24rpx">({{recordDate.xkksmc}})</text>
+                    <image src="../images/arrow.png" class="icon-arrow-right middle" />
+                    <slot  name="status1"></slot>
+                    <view class="textTime">
+                        {{recordDate.xkrq}}
+                    </view>
+                </view>
+               
+            </view>
+        </view>
+        <view wx:else>
+            <view 
+                class="package"
+            >
+                <view  class="textInfo {{index==dataLength-1?'':'borderS'}}"
+                    @tap="clickCurr"
+                >
+                    {{recordDate.kmmc}}
+                    <!-- <image src="../images/arrow.png" class="icon-arrow-right middle" /> -->
+                    <slot name="status"></slot>
+                    <view class="textTime">
+                        {{recordDate.xqmc}} {{recordDate.jxlmc}} {{recordDate.jsmc}} {{recordDate.zwh}}
+                        <text class="right">{{recordDate.kssj}}</text>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class textRecordC extends wepy.component {
+    props = {
+        recordDate: {
+            type: Object,
+            default: {},
+            twoWay: true,
+        },
+        isShowTitle: {
+            type: Boolean,
+            default: true,
+            twoWay: true,
+        },
+        isSc: {
+            type: Boolean,
+            default: true,
+            twoWay: true,
+        },
+        index: {
+            type: [ String, Number, ],
+            default: '',
+        },
+        dataLength: {
+            type: [ String, Number, ],
+            default: '',
+        },
+    }
+    data = {
+    };
+    methods = {
+        clickCurr() {
+            this.$emit('clickCurr', 1);
+        },
+        clickItem(val, index) {
+            this.$emit('clickItem', val.xkid, index);
+            // console.log(0);
+        },
+    };
+    onLoad() {
+        // this.percent = (1 / this.sliderNav.length * 100).toFixed(2);
+        // this.$apply()
+    };
+};
+</script>
+
+

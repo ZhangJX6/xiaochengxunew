@@ -1,0 +1,285 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .check-invigilate-form-boss {
+        .personal-detail-list-item {
+            height: 60rpx;
+            color: @888;
+            font-size: 28rpx;
+            position: relative;
+            .exam-classes {
+                line-height: 60rpx;
+            }
+        }
+        .img-container {
+            height: 120rpx;
+            padding-top: 10rpx;
+            font-size: 28rpx;
+            color: @888;
+            .image-container-view {
+                width: 330rpx;
+                height: 100rpx;
+                white-space: nowrap;
+            }
+            image {
+                width: 100rpx;
+                height: 100rpx;
+                margin-left: 10rpx;
+            }
+        }
+        .center-black-title {
+            color: @000;
+            height: 90rpx;
+            font-size: 28rpx;
+            line-height: 90rpx;
+            text-align: center;
+            background-color: @fff;
+        }
+        .center-black-title-nobody {
+            color: @ccc;
+            height: 50rpx;
+            font-size: 24rpx;
+            line-height: 50rpx;
+            text-align: left;
+            padding-left: 30rpx;
+            background-color: @fff;
+        }
+        .absent-stu-container {
+            border-bottom: solid 1rpx @ccc;
+        }
+        .absent-stu-container:last-child  {
+            border-bottom: none;
+        }
+    }
+    .get-image-container {
+        > view {
+            float: left;
+            margin-right: 18rpx;
+        }
+        padding: 30rpx 20rpx 20rpx 20rpx;
+        background-color: @fff;
+        min-height: 200rpx;
+        margin-bottom: 105rpx;
+        box-sizing: border-box;
+    }
+        
+    .get-image-container:after{
+        display: block;
+        content:'';
+        clear: both;
+        height:0;
+    }
+    .image-common {
+        width: 158rpx;
+        height: 158rpx;
+    }
+    .icon-arrow-right-person {
+        width: 16rpx;
+        height: 26rpx;
+        top: 7rpx;
+        right: 0rpx;
+        position: absolute;
+    }
+    .over-text-view {
+        width: 50%;
+        height: 100%;
+        text-align: right;
+        padding-right: 30rpx;
+    }
+    .kcjs {
+        color: #666;
+        font-size: 24rpx;
+        text-indent: 1em;
+        padding:10rpx 30rpx;
+    }
+</style>
+
+<template>
+    <view class="check-invigilate-form-boss">
+        <view class="mt20 white">
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>预计考生</view>
+                    <view>{{skrs}}人</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>实考人数</view>
+                    <view>{{infos.skrs}}人</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>缺考人数</view>
+                    <view>{{infos.qkrs}}人</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>违规考生</view>
+                    <view>{{wgList.length}}人</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考场记事</view>
+                </view>
+                <view class="kcjs">{{infos.kcjs || '未添加考场记事'}}</view>
+            </ListItemContainer>
+            <ListItemContainer classes="small">
+                <view  class="column-between ml30 mr30 personal-detail-list-item">
+                    <view>考场图片</view>
+                </view>
+                <view class="get-image-container">
+                    <view class="image-common chosed-image" wx:if="{{chosedImgs.length}}" wx:for="{{chosedImgs}}" wx:for-item="item" wx:for-index="index" wx:key="item" >
+                        <image src="{{item}}" @tap="tapToPreviewImage({{index}})" class="image-common"></image>
+                    </view>
+                    <view wx:if="{{!chosedImgs.length}}" class="kcjs" style="text-indent:0;">暂无图片</view>
+                </view>
+            </ListItemContainer>
+        </view>
+
+        <view class="mt20 white">
+            <view class="center-black-title">缺考考生</view>
+            <view class="center-black-title-nobody" wx:if="{{!qkList.length}}">无缺考考生</view>
+                <view
+                    wx:for="{{qkList}}"
+                    wx:key="index"
+                    wx:for-item="item"
+                    wx:for-index="index"
+                    class="column-between ml30 mr30 personal-detail-list-item"
+                    @tap="tapToAbsent({{item.xsxm}}, {{item.xsxh}})">
+                    <view>{{item.xsxm}}</view>
+                    <view class="relative">
+                        <view class="mr30">{{item.xsxh}}</view>
+                        <image src="../images/arrow.png" class="icon-arrow-right-person middle" />
+                    </view>
+                </view>
+        </view>
+
+        <view class="mt20 white">
+            <view class="center-black-title">违规考生</view>
+            <view class="center-black-title-nobody" wx:if="{{!qkList.length}}">无违规考生</view>
+
+                <view
+                    wx:for="{{wgList}}"
+                    wx:key="index"
+                    wx:for-item="items"
+                    wx:for-index="index"
+                    class="column-between ml30 mr30 personal-detail-list-item"
+                    @tap="tapToviolation({{items.xsxm}}, {{items.xsxh}}, {{items.wgxw}}, {{items}})">
+                    <view>{{items.xsxm}}</view>
+                    <view class="relative">
+                        <view class="mr30">{{items.xsxh}}</view>
+                        <image src="../images/arrow.png" class="icon-arrow-right-person middle"/>
+                    </view>
+                </view>
+        </view>
+
+    </view>    
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import sys from '../api/sys';
+import Invigilate from 'api/invigilate';
+export default class CheckInvigilateForm extends wepy.page {
+    config = {
+        navigationBarTitleText: '查看详情',
+    };
+    data = {
+        infos: null,
+        skrs: 0,
+        qkList: [],
+        wgList: [],
+        chosedImgs: [],
+    };
+
+    methods = {
+        /*
+        * 查看缺考考生
+        */
+        tapToAbsent(val1, val2) {
+            if (!val1 || !val2) {
+                tips.error('请稍后再试');
+                return false;
+            }
+            wepy.navigateTo({ url: `absentStudent?xm=${val1}&xh=${val2}`, });
+        },
+        /*
+        * 查看违规考生
+        */
+        tapToviolation(val1, val2, val3, items) {
+            let str = '';
+            items.attachmentList.forEach(item => {
+                str += item.filePath + ',';
+            });
+            str = str.substr(0, str.length - 1) || '';
+            wepy.navigateTo({ url: `violationStudent?types=show&xm=${val1}&xh=${val2}&wgxw=${val3}&from='wg'&src=${str}`, });
+        },
+        /*
+        * 预览图片
+        */
+        tapToPreviewImage(index) {
+            wepy.previewImage({
+                current: this.chosedImgs[index], // 当前显示图片的http链接
+                urls: this.chosedImgs, // 需要预览的图片http链接列表
+            });
+        },
+        async getImg(_this, data) {
+            let datas = '';
+            data.forEach(item => {
+                datas += item.id + ',';
+            });
+            datas = datas.substr(0, datas.length - 1) || '';
+            datas.split(',').forEach(async item => {
+                const rdata = await sys.getPath({ id: item, });
+                if (rdata.statusCode === 200) {
+                    _this.chosedImgs.push(rdata.data.data.path);
+                    _this.$apply();
+                } else {
+                    tips.error('图片获取失败');
+                }
+            });
+        },
+        async getPageInfo(query, that) {
+            const rdata = await Invigilate.form({
+                jkryId: query.id,
+            });
+            if (rdata.statusCode === 200) {
+                console.log('[ form ]', rdata.data.data);
+                that.infos = rdata.data.data;
+                that.skrs = Number(that.infos.skrs) + Number(that.infos.qkrs);
+                that.infos.kwWgjlList.forEach(item => {
+                    if (item.wglx === '0') {
+                        that.qkList.push(item);
+                    } else if (item.wglx === '1') {
+                        that.wgList.push(item);
+                    }
+                });
+                rdata.data.data.attachmentList.forEach(item => {
+                    // that.chosedImgs.push('http://47.93.31.175:8191' + item.filePath);
+                    that.chosedImgs.push('https://kwgl.newaigo.com' + item.filePath);
+                });
+                // this.getImg(that, rdata.data.data.attachmentList);
+                that.$apply(that);
+            } else {
+                tips.error(rdata.message);
+            }
+        },
+    };
+    onLoad(query) {
+        this.qkList = [];
+        this.wgList = [];
+        this.chosedImgs = [];
+        this.methods.getPageInfo(query, this);
+    };
+    onUnload() {
+        console.log('onUnload');
+        this.qkList = this.wgList = this.chosedImgs = [];
+        this.skrs = 0;
+        this.infos = null;
+    };
+};
+</script>

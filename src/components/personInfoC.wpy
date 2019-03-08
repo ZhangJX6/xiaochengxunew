@@ -1,0 +1,57 @@
+<style lang="less">
+    .person-info-c {
+        .package {
+            padding-left: 15rpx;
+            background-color: #fff;
+            .textInfo {
+                background-color: #fff;
+                padding: 20rpx 30rpx 20rpx; 
+                font-size: 34rpx;
+                color: rgba(0,0,0,1);
+                box-sizing: border-box;
+                line-height: 48rpx;
+            }
+            .borderS {
+                border-bottom: 1px solid #E5E5E5;                
+            }
+            .rightC {
+                float: right;
+                font-size: 34rpx;
+                line-height: 20rpx;
+            }
+        }
+    }
+</style>
+<template>
+    <view class="person-info-c">
+        <view 
+            class="package"
+        >
+        <view  class="textInfo borderS">
+            {{recordDate.school}}
+            <text class="rightC">
+                {{recordDate.status}}
+            </text>
+        </view>
+        </view>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+export default class textRecordC extends wepy.component {
+    props = {
+        recordDate: {
+            type: Object,
+            default: {},
+            twoWay: true,
+        },
+    };
+    data = {
+    };
+    methods = {
+    };
+};
+</script>
+
+

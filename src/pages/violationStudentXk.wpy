@@ -1,0 +1,357 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .violation-stu-boss {
+        .has-icon-arrow {
+            position: relative;
+        }
+        .register-surface-list-item {
+            font-size: 34rpx;
+            line-height: 90rpx;
+            view:nth-of-type(1) {
+                color: @000;
+            }
+            view:nth-of-type(2) {
+                color: @888;
+            }
+        }
+        .turn-down {
+            transform: rotate(90deg);
+            transition: transform .2s ease;
+        }
+        .turn-up {
+            transform: rotate(-90deg);
+        }
+        .violation-show-article {
+            color: @333;
+            text-indent: .5em;
+            font-size: 30rpx;
+            line-height: 30rpx;
+            padding-bottom: 30rpx;
+        }
+        .input-info-text-area {
+            width: 100%;
+            font-size: 32rpx;
+            border-radius: 10rpx;
+            padding: 10rpx;
+            box-sizing: border-box;
+        }
+        .text-area-container {
+            padding: 20rpx;
+            box-sizing: border-box;
+            background-color: @bgColor;
+        }
+        .get-image-container {
+            > view {
+                float: left;
+                margin-right: 18rpx;
+            }
+            padding: 30rpx 20rpx 20rpx 20rpx;
+            background-color: @fff;
+            min-height: 200rpx;
+            margin-bottom: 105rpx;
+            box-sizing: border-box;
+        }
+        
+        .get-image-container:after{
+            display: block;
+            content:'';
+            clear: both;
+            height:0;
+        }
+        .image-common {
+            width: 158rpx;
+            height: 158rpx;
+        }
+        .chosed-image {
+            position: relative;
+            margin-bottom: 20rpx;
+            image:nth-of-type(1) {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 32rpx;
+                height: 32rpx;
+                z-index: 19;
+            }
+            image:nth-of-type(2) {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+        .input-info-add-image {
+            border: solid 2rpx @666;
+            position: relative;
+            &::before {
+                content: '';
+                display: inline-block;
+                width: 4rpx;
+                height: 100rpx;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background-color: @666;
+            }
+            &::after {
+                content: '';
+                display: inline-block;
+                width: 100rpx;
+                height: 4rpx;
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                background-color: @666;
+            }
+        }
+    }
+</style>
+
+<template>
+    <view class="violation-stu-boss">
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>姓名</view>
+                    <view>{{xm}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>学号</view>
+                    <view>{{xh}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item" @tap="tapStuContent">
+                    <view>违规内容</view>
+                    <view class="mr30" wx:if="{{types === 'add'}}"></view>
+                    <view class="mr30" wx:if="{{types === 'show'}}">{{showArticle ? '收起' : '查看' }}</view>
+                </view>
+                <image src="../images/arrow.png" class="icon-arrow-right middle turn-down {{showArticle ? 'turn-up' : ''}}" />
+            </ListItemContainer>
+
+            <view wx:if="{{types === 'show' && showArticle}}" class="white pl30 pr30 pt30 pb30 violation-show-article">{{wgxw}}</view>
+            <view wx:if="{{types === 'add' && showArticle}}" class="text-area-container">
+                <textarea 
+                    value='{{infos}}'
+                    maxlength= '-1'
+                    class="white input-info-text-area"
+                    bindinput="getInputInfos"
+                    placeholder-style="color:#888"
+                    focus='{{showArticle}}'
+                    placeholder="请输入违规内容" />
+            </view>
+
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item" @tap="tapStuImage">
+                    <view>添加图片</view>
+                    <view class="mr30"></view>
+                </view>
+                <!-- <image src="../images/arrow.png" class="icon-arrow-right middle turn-down {{isShowImgs ? 'turn-up' : ''}}" /> -->
+            </ListItemContainer>
+
+            <view class="get-image-container" wx:if="{{types === 'add'}}">
+                <view class="image-common chosed-image" wx:for="{{chosedImgs}}" wx:for-item="item" wx:for-index="index" wx:key="item" >
+                    <image src="../images/close.png" @tap="tapToDeleteIMG({{index}})"></image>
+                    <image src="{{item}}" @tap="tapToPreviewImage({{index}})" ></image>
+                </view>
+                <view class="input-info-add-image image-common" @tap="tapToAddImage"></view>
+            </view>
+            <view style="width:100%; height: 10rpx;"></view>
+            <button type="primary" class="fix-bottom" @tap="tapToConfirm" disabled="{{iSDisable}}">确认</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import tips from 'utils/tips';
+import tourTest from '../api/tourTest';
+import sys from '../api/sys';
+import ListItemContainer from 'components/listItemContainer';
+
+export default class violationStudent extends wepy.page {
+    config = {
+        navigationBarTitleText: '违规考生',
+    };
+    data = {
+        showArticle: true,
+        isShowImgs: false,
+        iSDisable: true,
+        xm: null,
+        xh: null,
+        xkryId: null,
+        wgxw: null,
+        types: null, // 类型: dis, add
+        infos: null,
+        chosedImgs: [],
+        index: null,
+        attList: '',
+        id: '',
+        srcList: [],
+        urlList: [],
+    };
+    components = {
+        ListItemContainer: ListItemContainer,
+    };
+    methods = {
+        // 点击违规内容
+        tapStuContent() {
+            this.showArticle = !this.showArticle;
+        },
+        getInputInfos(val) {
+            this.infos = val.detail.value;
+        },
+        async tapToAddImage() {
+            const rdata = await wepy.chooseImage({
+                count: 9 - this.chosedImgs.length,
+                sizeType: [ 'original', 'compressed', ],
+                sourceType: [ 'album', 'camera', ],
+            });
+            rdata.tempFilePaths.forEach(item => {
+                this.chosedImgs.push(item);
+            });
+            this.$apply();
+        },
+        tapToDeleteIMG(index) {
+            this.chosedImgs.splice(index, 1);
+            this.attList = '';
+            this.$apply();
+        },
+        async tapToConfirm() {
+            if (!this.infos) {
+                tips.error('请输入违规内容');
+                return;
+            }
+            this.iSDisable = true;
+            const _this = this;
+            if (!this.chosedImgs.length) {
+                this.srcList.forEach(item1 => {
+                    const obj1 = {
+                        id: item1.id,
+                    };
+                    sys.deleteImg(obj1).then(res => {
+                    }).catch(res => {
+                        console.log('删除失败');
+                    });
+                });
+                _this.methods.upUserInfo(_this.data);
+                return;
+            };
+            this.urlList.forEach((item, index) => {
+                if (!this.chosedImgs.includes(item)) {
+                    this.srcList.forEach(item1 => {
+                        if (item1.path === item) {
+                            const obj1 = {
+                                id: item1.id,
+                            };
+                            sys.deleteImg(obj1).then(res => {
+                            }).catch(res => {
+                                console.log('删除失败');
+                            });
+                        };
+                    });
+                };
+            });
+            let num = 0;
+            let num2 = 0;
+            this.chosedImgs.forEach(async (item, count) => {
+                if (this.urlList.includes(item)) {
+                    num++;
+                    num2++;
+                };
+                if (num === this.data.chosedImgs.length) {
+                    _this.methods.upUserInfo(_this.data);
+                };
+                if (!this.urlList.includes(item)) {
+                    tips.loading('上传中');
+                    const rupload = await wepy.uploadFile({
+                        url: 'https://kwgl.newaigo.com/a/ws/sys/attachment/uploadFile',
+                        // url: 'http://47.93.31.175:8191/spoc-kwgl/a/ws/sys/attachment/uploadFile',
+                        filePath: item,
+                        header: wepy.$instance.globalData.header,
+                        name: 'files',
+                        formData: {
+                            objectId: null,
+                            type: 'xkwg_img',
+                            fileType: 'all',
+                            dirName: 'images',
+                        },
+                    });
+                    _this.data.attList += JSON.parse(rupload.data).data.id + ',';
+                    num2++;
+                    if (num2 === this.chosedImgs.length) {
+                        tips.loaded();
+                        _this.methods.upUserInfo(_this.data);
+                    };
+                };
+            });
+        },
+
+        upUserInfo(_this) {
+            const obj = {
+                attList: _this.attList,
+                id: _this.id,
+                jkdjId: _this.xkryId,
+                wgxw: _this.infos,
+                xsxh: _this.xh,
+                xsxm: _this.xm,
+            };
+            tourTest.saveStudentOut(obj).then(res => {
+                if (res.data.statusCode === 200) {
+                    tips.success('添加成功', 300).then(res => {
+                        wepy.navigateBack({ delta: this.id ? 1 : 2, });
+                    });
+                } else {
+                    tips.modal(res.data.message);
+                };
+            }).catch(res => {
+            });
+        },
+        tapToPreviewImage(index) {
+            wepy.previewImage({
+                current: this.chosedImgs[index], // 当前显示图片的http链接
+                urls: this.chosedImgs, // 需要预览的图片http链接列表
+            });
+        },
+    };
+    onLoad(query) {
+        this.iSDisable = false;
+        this.srcList = [];
+        this.chosedImgs = [];
+        this.urlList = [];
+        this.attList = '';
+        this.id = '';
+        this.id = query.studId ? query.studId : '';
+        this.xkryId = query.xkryId;
+        this.xm = query.xm;
+        this.xh = query.xh;
+        this.wgxw = query.wgxw ? query.wgxw : '';
+        this.types = query.types;
+        this.infos = this.wgxw;
+        this.$apply();
+        wepy.getStorage({
+            key: 'src',
+        }).then(res => {
+            if (res) {
+                this.srcList = [];
+                this.chosedImgs = [];
+                this.urlList = [];
+                this.$apply();
+                this.srcList = res.data.map(item => {
+                    item.path = 'https://kwgl.newaigo.com' + item.path;
+                    // item.path = 'http://47.93.31.175:8191' + item.path;
+                    return item;
+                });
+                res.data.forEach(item => {
+                    this.chosedImgs.push(item.path);
+                    this.urlList.push(item.path);
+                });
+            };
+        });
+        this.$apply();
+    };
+};
+</script>

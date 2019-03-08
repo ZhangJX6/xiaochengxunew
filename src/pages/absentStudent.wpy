@@ -1,0 +1,66 @@
+<style lang="less">
+    @import '../styles/base.less';
+    .absent-stu-boss {
+        .has-icon-arrow {
+            position: relative;
+        }
+        .register-surface-list-item {
+            font-size: 34rpx;
+            line-height: 90rpx;
+            view:nth-of-type(1) {
+                color: @000;
+            }
+            view:nth-of-type(2) {
+                color: @888;
+            }
+        }
+    }
+</style>
+
+<template>
+    <view class="absent-stu-boss">
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>姓名</view>
+                    <view class="mr30">{{xm}}</view>
+                </view>
+            </ListItemContainer>
+            <ListItemContainer class="has-icon-arrow">
+                <view class="ml30 mr30 column-between register-surface-list-item">
+                    <view>学号</view>
+                    <view class="mr30">{{xh}}</view>
+                </view>
+            </ListItemContainer>
+            <view style="width:100%; height: 10rpx;"></view>
+            <button type="primary" class="fix-bottom" @tap="tapToConfirm">确认</button>
+    </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import ListItemContainer from 'components/listItemContainer';
+
+export default class AbsentStudent extends wepy.page {
+    config = {
+        navigationBarTitleText: '缺考考生',
+    };
+    data = {
+        xm: null,
+        xh: null,
+    };
+    components = {
+        ListItemContainer: ListItemContainer,
+    };
+    methods = {
+        // 点击确认
+        tapToConfirm() {
+            wepy.navigateBack({ delta: 1, });
+        },
+    };
+    onLoad(query) {
+        this.xm = query.xm;
+        this.xh = query.xh;
+        this.$apply();
+    };
+};
+</script>
